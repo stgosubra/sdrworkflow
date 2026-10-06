@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rubik:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  /* Cockpit Dark: blue-cast near-black with faint console glow top-right */
+  background:
+    radial-gradient(60% 45% at 100% 0, #101a3a 0, transparent 60%),
+    radial-gradient(45% 40% at 0 8%, #0c1340 0, transparent 55%),
+    #0a0c12;
+  background-attachment: fixed;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #fafafa;
+}
+
+textarea, input, button { font-family: inherit; }
+
+textarea::placeholder, input::placeholder {
+  color: #6a6e78;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #0a0c12; }
+::-webkit-scrollbar-thumb { background: #22262f; border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: #34405c; }
+
+/* Pulse for live-status dots (staleness banner). Inline styles cannot declare
+   keyframes, so the one animation the shell needs lives here. */
+@keyframes ct-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}

@@ -1,0 +1,15 @@
+{
+  "_comment": "Template for ~/.claude/skills/briefing-daily/config.local.json. The install skill copies this, fills the __PLACEHOLDER__ values from the answers it collects, and writes the result outside the repo. The filled copy is never committed - it is per-machine, and projectPath differs on every install.",
+
+  "owner": "__OWNER_NAME__",
+  "ownerId": "__HUBSPOT_OWNER_ID__",
+  "email": "__OWNER_EMAIL__",
+  "timezone": "__TIMEZONE__",
+  "projectPath": "__PROJECT_PATH__",
+  "spec": "__PROJECT_PATH__/REFRESH_SPEC.md",
+
+  "portalId": "6195055",
+  "pointsQuotaPerMonth": 90,
+  "previewName": "daily-briefing",
+  "modules": ["briefing", "performance", "selfserved"]
+}

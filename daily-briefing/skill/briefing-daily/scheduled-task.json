@@ -1,0 +1,11 @@
+{
+  "_comment": "Template for the weekday refresh task. The install skill registers this via the scheduled-tasks connector. Nothing here is machine-specific, so it is committed as-is.",
+
+  "taskId": "briefing-daily",
+  "cronExpression": "45 6 * * 1-5",
+  "enabled": true,
+  "description": "Weekday 06:45 daily-briefing refresh - connector preflight, then module 01 (Today) as a hard blocking gate, then 03 (Performance) and 04 (Self-Served), all written through their generators. Counts-only report, no PII, no commits, no push.",
+  "prompt": "Run the briefing-daily skill.",
+
+  "_afterRegistering": "A newly created scheduled task has no banked tool approvals, so its first unattended fire can evaporate with a clean lastRunAt and no output. Click Run now once, manually, and approve the connector prompts. Only after that is the schedule trustworthy."
+}

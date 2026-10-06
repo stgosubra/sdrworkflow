@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Module 01 - 10 micro layouts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root{
+    --bg: #08090f;
+    --panel: #11141e;
+    --hairline: rgba(255,255,255,0.07);
+    --hairline-2: rgba(255,255,255,0.12);
+    --paper: #f4f5fa;
+    --paper-2: #cfd2dc;
+    --paper-3: #8a8e9c;
+    --paper-4: #5a5e6c;
+    --blue: #4d82ff;
+    --emerald: #47cd89;
+    --amber: #fdb022;
+    --red: #f97066;
+    --purple: #8b5cf6;
+    --cyan: #59d5d5;
+    --sans: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --display: 'Fraunces', serif;
+  }
+  body {
+    background: var(--bg);
+    color: var(--paper);
+    font-family: var(--sans);
+    background-image:
+      radial-gradient(900px 600px at 0% 0%, rgba(220,38,38,0.08), transparent 60%),
+      radial-gradient(1000px 800px at 100% 100%, rgba(139,92,246,0.08), transparent 60%);
+    min-height: 100vh;
+    padding: 40px;
+  }
+  .page-header {
+    max-width: 1480px;
+    margin: 0 auto 36px;
+  }
+  .page-header .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    color: var(--paper-3);
+    text-transform: uppercase;
+  }
+  .page-header h1 {
+    font-family: var(--display);
+    font-size: 44px;
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    margin-top: 8px;
+    line-height: 1.05;
+  }
+  .page-header h1 em { font-style: italic; color: var(--paper-2); font-weight: 300; }
+  .page-header p {
+    color: var(--paper-3);
+    margin-top: 10px;
+    max-width: 560px;
+  }
+
+  .grid {
+    max-width: 1480px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px;
+  }
+  @media (max-width: 1180px) { .grid { grid-template-columns: 1fr; } }
+
+  .proposal {
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .proposal-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    border-bottom: 1px dashed var(--hairline-2);
+    padding-bottom: 14px;
+  }
+  .proposal-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--blue);
+  }
+  .proposal-title {
+    font-family: var(--display);
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+  }
+  .proposal-tag {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--paper-4);
+    border: 1px solid var(--hairline-2);
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+  .proposal-desc {
+    font-size: 12.5px;
+    color: var(--paper-3);
+    line-height: 1.5;
+  }
+
+  /* mockup canvas - the "real" preview frame */
+  .mock {
+    background: #07080d;
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    height: 380px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* === GLOBAL TINY HELPERS for mocks === */
+  .mock .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; vertical-align: 1px; }
+  .mock .led { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+  .mock .pill { display: inline-block; font-family: var(--mono); font-size: 8px; letter-spacing: 0.18em; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; }
+  .mock .h-rule { height: 1px; background: var(--hairline); }
+  .mock .v-rule { width: 1px; background: var(--hairline); }
+
+  /* ════════════════════════════════════════════════════════════════════
+     01. AGENDA SPINE - left vertical timeline rail, sticky now-line
+     ════════════════════════════════════════════════════════════════════ */
+  .m01 {
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    gap: 16px;
+    height: 100%;
+  }
+  .m01 .rail {
+    border-right: 1px solid var(--hairline);
+    position: relative;
+    padding-right: 14px;
+  }
+  .m01 .tick {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--paper-4);
+    text-align: right;
+    margin-bottom: 38px;
+  }
+  .m01 .tick.now { color: var(--blue); font-weight: 700; }
+  .m01 .now-line {
+    position: absolute;
+    top: 88px;
+    right: -1px;
+    left: -20px;
+    height: 1px;
+    background: var(--blue);
+    box-shadow: 0 0 8px rgba(77,130,255,0.5);
+  }
+  .m01 .now-line::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: -3px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--blue);
+    box-shadow: 0 0 10px var(--blue);
+  }
+  .m01 .events { display: flex; flex-direction: column; gap: 12px; }
+  .m01 .ev {
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.02);
+    border-left: 2px solid var(--blue);
+  }
+  .m01 .ev.done { opacity: 0.4; border-left-color: var(--paper-4); }
+  .m01 .ev.next { border-left-color: var(--emerald); background: rgba(71,205,137,0.04); }
+  .m01 .ev-time { font-family: var(--mono); font-size: 9px; color: var(--paper-3); letter-spacing: 0.1em; }
+  .m01 .ev-title { font-size: 13px; font-weight: 500; margin-top: 3px; }
+
+  /* ════════════════════════════════════════════════════════════════════
+     02. FOCUS LANE - giant NOW card + queue beside it
+     ════════════════════════════════════════════════════════════════════ */
+  .m02 {
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 14px;
+    height: 100%;
+  }
+  .m02 .focus {
+    background: linear-gradient(180deg, rgba(77,130,255,0.10), rgba(77,130,255,0.02));
+    border: 1px solid rgba(77,130,255,0.3);
+    border-radius: 10px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .m02 .focus-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.32em; color: var(--blue); }
+  .m02 .focus-time {
+    font-family: var(--display); font-size: 44px; font-weight: 400; letter-spacing: -0.04em;
+    margin-top: 10px; line-height: 1;
+  }
+  .m02 .focus-meet { font-size: 13px; color: var(--paper); margin-top: 8px; line-height: 1.3; }
+  .m02 .focus-prospect { font-size: 11px; color: var(--paper-3); margin-top: 4px; font-family: var(--mono); }
+  .m02 .focus-cta {
+    margin-top: auto;
+    background: var(--paper); color: #08090f;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
+    padding: 8px 12px; border-radius: 5px; font-weight: 700;
+    text-align: center; text-transform: uppercase;
+  }
+  .m02 .queue { display: flex; flex-direction: column; gap: 8px; }
+  .m02 .q-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em; color: var(--paper-4); }
+  .m02 .q-item {
+    border: 1px solid var(--hairline);
+    border-radius: 7px;
+    padding: 8px 10px;
+    font-size: 11.5px;
+  }
+  .m02 .q-time { font-family: var(--mono); font-size: 9px; color: var(--paper-3); }
+
+  /* ════════════════════════════════════════════════════════════════════
+     03. MORNING DIGEST - editorial newspaper, single-col with magazine headlines
+     ════════════════════════════════════════════════════════════════════ */
+  .m03 {
+    padding: 20px 24px;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Instrument Serif', var(--display);
+  }
+  .m03 .masthead {
+    border-bottom: 2px solid var(--paper);
+    padding-bottom: 8px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .m03 .masthead .title { font-family: 'DM Serif Display', serif; font-size: 24px; letter-spacing: -0.02em; }
+  .m03 .masthead .iss { font-family: var(--mono); font-size: 9px; color: var(--paper-3); letter-spacing: 0.2em; }
+  .m03 .lede { font-size: 22px; line-height: 1.15; margin-top: 14px; font-weight: 400; letter-spacing: -0.01em; font-style: italic; }
+  .m03 .body { font-family: var(--sans); font-size: 11.5px; color: var(--paper-2); line-height: 1.6; margin-top: 10px; column-count: 2; column-gap: 22px; column-rule: 1px solid var(--hairline); }
+  .m03 .body .dropcap { float: left; font-family: 'DM Serif Display', serif; font-size: 32px; line-height: 0.9; padding: 4px 6px 0 0; color: var(--blue); }
+
+  /* ════════════════════════════════════════════════════════════════════
+     04. COMMAND DECK - terminal/CLI feel, mono everywhere, prompt at top
+     ════════════════════════════════════════════════════════════════════ */
+  .m04 {
+    padding: 16px 18px;
+    height: 100%;
+    font-family: 'IBM Plex Mono', var(--mono);
+    font-size: 11.5px;
+    line-height: 1.7;
+    color: var(--paper-2);
+  }
+  .m04 .row { display: flex; gap: 8px; }
+  .m04 .lt { color: var(--emerald); }
+  .m04 .key { color: var(--blue); }
+  .m04 .dim { color: var(--paper-4); }
+  .m04 .acc { color: var(--amber); }
+  .m04 .red { color: var(--red); }
+  .m04 .prompt::before { content: '$ '; color: var(--emerald); }
+  .m04 .blink { display: inline-block; width: 7px; height: 13px; background: var(--paper); margin-left: 3px; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ════════════════════════════════════════════════════════════════════
+     05. BENTO GRID - asymmetric tiles, one big + many small
+     ════════════════════════════════════════════════════════════════════ */
+  .m05 {
+    padding: 16px;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .m05 .b {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+  .m05 .b-label { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.2em; color: var(--paper-4); text-transform: uppercase; }
+  .m05 .b-val { font-family: var(--display); font-size: 20px; letter-spacing: -0.02em; }
+  .m05 .b.hero {
+    grid-row: 1 / span 2;
+    grid-column: 1;
+    background: linear-gradient(135deg, rgba(77,130,255,0.18), rgba(77,130,255,0.03));
+    border-color: rgba(77,130,255,0.35);
+  }
+  .m05 .b.hero .b-val { font-size: 30px; }
+  .m05 .b.wide { grid-column: 1 / span 3; grid-row: 3; }
+
+  /* ════════════════════════════════════════════════════════════════════
+     06. CIRCADIAN ARC - day shown as half-arc clock with events on it
+     ════════════════════════════════════════════════════════════════════ */
+  .m06 {
+    padding: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .m06 svg { width: 100%; max-width: 360px; height: auto; }
+  .m06 .meta {
+    text-align: center;
+    margin-top: 18px;
+    font-family: var(--display);
+    font-size: 18px;
+    letter-spacing: -0.01em;
+  }
+  .m06 .meta small { display: block; font-family: var(--mono); font-size: 10px; color: var(--paper-3); margin-top: 4px; letter-spacing: 0.18em; }
+
+  /* ════════════════════════════════════════════════════════════════════
+     07. CARDSTACK - shuffleable Tinder-style stack of next meetings
+     ════════════════════════════════════════════════════════════════════ */
+  .m07 {
+    padding: 24px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .m07 .stack { position: relative; width: 80%; height: 240px; }
+  .m07 .card {
+    position: absolute;
+    inset: 0;
+    background: var(--panel);
+    border: 1px solid var(--hairline-2);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+  }
+  .m07 .card.b2 { transform: translateY(14px) scale(0.95); opacity: 0.7; z-index: 1; }
+  .m07 .card.b3 { transform: translateY(28px) scale(0.9); opacity: 0.4; z-index: 0; }
+  .m07 .card.top { z-index: 3; }
+  .m07 .c-stamp { font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em; color: var(--blue); }
+  .m07 .c-name { font-family: var(--display); font-size: 22px; font-weight: 500; margin-top: 8px; }
+  .m07 .c-meta { font-size: 11px; color: var(--paper-3); margin-top: 4px; font-family: var(--mono); }
+  .m07 .c-divider { height: 1px; background: var(--hairline); margin: 14px 0; }
+  .m07 .c-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px; }
+  .m07 .c-row .k { color: var(--paper-4); font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; }
+  .m07 .c-row .v { color: var(--paper); }
+  .m07 .swipe-hint {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; color: var(--paper-4);
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     08. SPLIT FOLD - two halves, day stat columns + warm meeting list
+     ════════════════════════════════════════════════════════════════════ */
+  .m08 {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .m08 .left {
+    background: #fafafa;
+    color: #0a0a0a;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .m08 .left .label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; color: #6a6a6a; text-transform: uppercase; }
+  .m08 .left .num { font-family: var(--display); font-size: 64px; letter-spacing: -0.04em; font-weight: 500; line-height: 1; margin-top: 6px; }
+  .m08 .left .num-sub { font-family: var(--mono); font-size: 11px; color: #6a6a6a; }
+  .m08 .left .stats { display: flex; gap: 18px; }
+  .m08 .left .stat .n { font-family: var(--display); font-size: 22px; }
+  .m08 .left .stat .k { font-family: var(--mono); font-size: 9px; color: #6a6a6a; letter-spacing: 0.18em; text-transform: uppercase; }
+  .m08 .right { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .m08 .right .label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; color: var(--paper-4); text-transform: uppercase; }
+  .m08 .right .e {
+    border-bottom: 1px solid var(--hairline);
+    padding: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .m08 .right .e:last-child { border-bottom: none; }
+  .m08 .right .e .t { font-family: var(--mono); font-size: 10px; color: var(--paper-3); }
+  .m08 .right .e .n { font-size: 12px; }
+
+  /* ════════════════════════════════════════════════════════════════════
+     09. ORBITAL - central clock with prospect chips orbiting
+     ════════════════════════════════════════════════════════════════════ */
+  .m09 {
+    height: 100%;
+    padding: 16px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .m09 .center {
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    border: 1px solid var(--hairline-2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle, rgba(77,130,255,0.15), transparent 70%);
+    position: relative; z-index: 2;
+  }
+  .m09 .center .label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em; color: var(--blue); }
+  .m09 .center .time { font-family: var(--display); font-size: 26px; letter-spacing: -0.02em; }
+  .m09 .center .date { font-family: var(--mono); font-size: 10px; color: var(--paper-3); margin-top: 2px; }
+  .m09 .ring {
+    position: absolute; inset: 30px;
+    border: 1px dashed rgba(255,255,255,0.07);
+    border-radius: 50%;
+  }
+  .m09 .ring.outer { inset: 8px; border-color: rgba(255,255,255,0.04); }
+  .m09 .chip {
+    position: absolute;
+    background: var(--panel);
+    border: 1px solid var(--hairline-2);
+    border-radius: 18px;
+    padding: 5px 10px 5px 7px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+  }
+  .m09 .chip .led { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* ════════════════════════════════════════════════════════════════════
+     10. PAPERWORK - cream/ivory printed-doc aesthetic, mono typewriter
+     ════════════════════════════════════════════════════════════════════ */
+  .m10 {
+    background: #f3eee3;
+    color: #1a1815;
+    height: 100%;
+    padding: 22px 26px;
+    font-family: 'IBM Plex Mono', var(--mono);
+    position: relative;
+  }
+  .m10::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 4px 4px;
+    pointer-events: none;
+  }
+  .m10 .stamp {
+    border: 2px solid #c1503f;
+    color: #c1503f;
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    transform: rotate(-3deg);
+    font-weight: 700;
+    position: absolute;
+    top: 20px; right: 24px;
+  }
+  .m10 .doc-h { font-family: 'DM Serif Display', serif; font-size: 22px; letter-spacing: -0.01em; }
+  .m10 .doc-sub { font-size: 10px; letter-spacing: 0.18em; margin-top: 4px; color: #555; text-transform: uppercase; }
+  .m10 .doc-rule { border-bottom: 1px dashed #1a1815; margin: 14px 0; }
+  .m10 .line { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px dotted rgba(0,0,0,0.15); }
+  .m10 .line .k { color: #555; }
+  .m10 .footer { position: absolute; bottom: 18px; left: 26px; right: 26px; display: flex; justify-content: space-between; font-size: 9px; color: #555; letter-spacing: 0.16em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="kicker">Module 01 · Today · 10 micro layouts</div>
+  <h1>Pick a <em>direction</em></h1>
+  <p>Ten throwaway frames at the same scale, same canvas, same constellation aesthetic family. Each commits to a different layout logic. Tell me a number; I build it for real.</p>
+</header>
+
+<div class="grid">
+
+  <!-- 01 AGENDA SPINE -->
+  <article class="proposal">
+    <header class="proposal-header">
+      <span class="proposal-num">01</span>
+      <span class="proposal-title">Agenda Spine</span>
+      <span class="proposal-tag">TIMELINE</span>
+    </header>
+    <p class="proposal-desc">Vertical time rail on the left with a hard NOW line. Done events fade. Next meeting glows green. Best for time-anchored mental model.</p>
+    <div class="mock">
+      <div class="m01">
+        <div class="rail">
+          <div class="now-line"></div>
+          <div class="tick">09:00</div>
+          <div class="tick">11:00</div>
+          <div class="tick now">13:00</div>
+          <div class="tick">15:00</div>
+          <div class="tick">17:00</div>
+        </div>
+        <div class="events">
+          <div class="ev done"><div class="ev-time">09:30 · DONE</div><div class="ev-title">Internal stand-up</div></div>
+          <div class="ev done"><div class="ev-time">11:00 · DONE</div><div class="ev-title">Acme Corp · Discovery</div></div>
+          <div class="ev next"><div class="ev-time">13:30 · NEXT IN 12m</div><div class="ev-title">Vesta Health · Demo</div></div>
+          <div class="ev"><div class="ev-time">15:00</div><div class="ev-title">Northwind · Pricing</div></div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 02 FOCUS LANE -->
+  <article class="proposal">
+    <header class="proposal-header">
+      <span class="proposal-num">02</span>
+      <span class="proposal-title">Focus Lane</span>
+      <span class="proposal-tag">SINGULAR</span>
+    </header>
+    <p class="proposal-desc">One enormous "next meeting" card with start-call CTA. Queue is a quiet secondary list. Minimum cognitive load - one decision visible at a time.</p>
+    <div class="mock">
+      <div class="m02">
+        <div class="focus">
+          <div>
+            <div class="focus-label">NEXT · IN 12 MIN</div>
+            <div class="focus-time">13:30</div>
+            <div class="focus-meet">Vesta Health · Discovery call</div>
+            <div class="focus-prospect">M. RIVERA · VP REVOPS</div>
+          </div>
+          <div class="focus-cta">OPEN BRIEF ↗</div>
+        </div>
+        <div class="queue">
+          <div class="q-label">UP NEXT</div>
+          <div class="q-item"><div class="q-time">15:00</div>Northwind</div>
+          <div class="q-item"><div class="q-time">15:45</div>Aerial Inc</div>
+          <div class="q-item"><div class="q-time">16:30</div>Forge AI</div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 03 MORNING DIGEST -->
+  <article class="proposal">
+    <header class="proposal-header">
+      <span class="proposal-num">03</span>
+      <span class="proposal-title">Morning Digest</span>
+      <span class="proposal-tag">EDITORIAL</span>
+    </header>
+    <p class="proposal-desc">Newspaper-grade. Masthead with date, italic serif lede, 2-col body with dropcap. Reads like the morning paper - calm, narrative, restrained.</p>
+    <div class="mock">
+      <div class="m03">
+        <div class="masthead">
+          <div class="title">The Cockpit</div>
+          <div class="iss">VOL.06 · NO.18 · JUN 2026</div>
+        </div>
+        <div class="lede">Four meetings today, three of them late-stage. The Vesta call is the one that matters.</div>
+        <div class="body">
+          <p><span class="dropcap">T</span>he morning opens softly - an internal stand-up at nine-thirty, then the Acme discovery wraps at noon. The pivot of the day is one-thirty: Vesta Health, VP RevOps, second touch, demo expected.</p>
+          <p>Pricing follows at three with Northwind, then a tight one-on-one with Aerial Inc and a closing round with Forge AI. Two pipeline reviews to read before EOD.</p>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 04 COMMAND DECK -->
+  <article class="proposal">
+    <header class="proposal-header">
+      <span class="proposal-num">04</span>
+      <span class="proposal-title">Command Deck</span>
+      <span class="proposal-tag">TERMINAL</span>
+    </header>
+    <p class="proposal-desc">All-mono CLI aesthetic. Prompt at top, fixture-pulled metrics below, blinking cursor. For the person who lives in their terminal.</p>
+    <div class="mock">
+      <div class="m04">
+        <div class="row"><span class="lt">▸</span><span class="dim">cockpit@ss</span><span class="dim">:</span><span class="key">~/today</span><span class="dim">$</span> status<span class="blink"></span></div>
+        <div style="margin-top:8px"><span class="key">⟶</span> <span>day</span>      <span class="dim">······</span>  WED 18 JUN 2026</div>
+        <div><span class="key">⟶</span> <span>meetings</span> <span class="dim">·</span>  <span class="acc">4 scheduled</span> · 1 done · 1 live</div>
+        <div><span class="key">⟶</span> <span>next</span>     <span class="dim">······</span>  <span class="acc">13:30 VESTA HEALTH</span></div>
+        <div><span class="key">⟶</span> <span>prep</span>     <span class="dim">······</span>  <span class="lt">✓ briefs(4)</span> · <span class="red">✗ slack(2)</span></div>
+        <div><span class="key">⟶</span> <span>quota</span>    <span class="dim">······</span>  35/40 SQL · 87.5%</div>
+        <div style="margin-top:8px"><span class="dim">─── alerts ───</span></div>
+        <div><span class="red">!</span> 2 missed slacks · #pipeline-emea</div>
+        <div><span class="acc">!</span> Northwind moved to 15:00</div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 05 BENTO GRID -->
+  <article class="proposal">
+    <header class="proposal-header">
+      <span class="proposal-num">05</span>
+      <span class="proposal-title">Bento</span>
+      <span class="proposal-tag">ASYMMETRIC</span>
+    </header>
+    <p class="proposal-desc">Apple-style bento grid. One hero tile (next call), many small KPI cells. Dense, scannable, very modern. Glanceable everything.</p>
+    <div class="mock">
+      <div class="m05">
+        <div class="b hero">
+          <div class="b-label">NEXT MEETING</div>
+          <div><div class="b-val">Vesta</div><div style="font-family:var(--mono);font-size:10px;color:var(--paper-3);margin-top:2px;">13:30 · IN 12M</div></div>
+          <div style="display:flex;gap:6px;"><span class="pill" style="background:rgba(71,205,137,0.1);color:var(--emerald);border:1px solid rgba(71,205,137,0.25);">SQL</span><span class="pill" style="background:rgba(77,130,255,0.1);color:var(--blue);border:1px solid rgba(77,130,255,0.3);">DEMO</span></div>
+        </div>
+        <div class="b"><div class="b-label">TODAY</div><div class="b-val">4</div></div>
+        <div class="b"><div class="b-label">DONE</div><div class="b-val" style="color:var(--emerald);">1</div></div>
+        <div class="b"><div class="b-label">QUOTA</div><div class="b-val">87%</div></div>
+        <div class="b"><div class="b-label">SLACK</div><div class="b-val" style="color:var(--amber);">2</div></div>
+        <div class="b wide" style="flex-direction:row;align-items:center;gap:14px;"><div class="b-label">SHIFT END</div><div style="font-family:var(--display);font-size:18px;">18:30</div><div style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--paper-3);">5h 12m left</div></div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 06 CIRCADIAN ARC -->
+  <article class="proposal">
+    <header class="proposal-header">
+      <span class="proposal-num">06</span>
+      <span class="proposal-title">Circadian Arc</span>
+      <span class="proposal-tag">DIAGRAM</span>
+    </header>
+    <p class="proposal-desc">The whole day rendered as a half-arc clock. Meetings as nodes on the arc, sized by importance. Pure visual - feels like a watch face.</p>
+    <div class="mock">
+      <div class="m06">
+        <svg viewBox="0 0 320 180" fill="none">
+          <defs>
+            <linearGradient id="arc-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#4d82ff" stop-opacity="0.4"/>
+              <stop offset="50%" stop-color="#4d82ff" stop-opacity="1"/>
+              <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.4"/>
+            </linearGradient>
+          </defs>
+          <path d="M 30 160 A 130 130 0 0 1 290 160" stroke="rgba(255,255,255,0.08)" stroke-width="1" fill="none"/>
+          <path d="M 30 160 A 130 130 0 0 1 160 30" stroke="url(#arc-grad)" stroke-width="2" fill="none"/>
+          <!-- ticks -->
+          <text x="30" y="175" font-family="JetBrains Mono" font-size="9" fill="#8a8e9c">09</text>
+          <text x="95" y="60" font-family="JetBrains Mono" font-size="9" fill="#8a8e9c">11</text>
+          <text x="155" y="22" font-family="JetBrains Mono" font-size="9" fill="#f4f5fa">13</text>
+          <text x="220" y="60" font-family="JetBrains Mono" font-size="9" fill="#8a8e9c">15</text>
+          <text x="285" y="175" font-family="JetBrains Mono" font-size="9" fill="#8a8e9c">17</text>
+          <!-- nodes -->
+          <circle cx="95"  cy="68" r="4" fill="#5a5e6c"/>
+          <circle cx="160" cy="30" r="7" fill="#4d82ff" stroke="#fff" stroke-width="1"/>
+          <circle cx="220" cy="68" r="5" fill="#8b5cf6"/>
+          <circle cx="270" cy="120" r="4" fill="#47cd89"/>
+          <!-- now indicator -->
+          <line x1="160" y1="160" x2="160" y2="160" stroke="#4d82ff"/>
+          <circle cx="160" cy="160" r="3" fill="#4d82ff"/>
+          <text x="160" y="180" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#4d82ff" letter-spacing="2">NOW</text>
+        </svg>
+        <div class="meta">Vesta Health · 13:30<small>NEXT · IN 12 MIN</small></div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 07 CARDSTACK -->
+  <article class="proposal">
+    <header class="proposal-header">
+      <span class="proposal-num">07</span>
+      <span class="proposal-title">Cardstack</span>
+      <span class="proposal-tag">SHUFFLE</span>
+    </header>
+    <p class="proposal-desc">Stacked playing-card style. Top card is next meeting; layered cards behind. Swipe/arrow keys to flip through. Tactile, focused, one-at-a-time.</p>
+    <div class="mock">
+      <div class="m07">
+        <div class="stack">
+          <div class="card b3"></div>
+          <div class="card b2"></div>
+          <div class="card top">
+            <div class="c-stamp">NEXT · 13:30</div>
+            <div class="c-name">Vesta Health</div>
+            <div class="c-meta">M. RIVERA · VP REVOPS</div>
+            <div class="c-divider"></div>
+            <div class="c-row"><span class="k">Stage</span><span class="v">Discovery 2</span></div>
+            <div class="c-row"><span class="k">Seats</span><span class="v">11-20</span></div>
+            <div class="c-row"><span class="k">Geos</span><span class="v">US · DE</span></div>
+            <div class="c-row"><span class="k">Brief</span><span class="v" style="color:var(--emerald);">✓ Ready</span></div>
+          </div>
+        </div>
+        <div class="swipe-hint">◂ ◂  PREV   ·   NEXT  ▸ ▸</div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 08 SPLIT FOLD -->
+  <article class="proposal">
+    <header class="proposal-header">
+      <span class="proposal-num">08</span>
+      <span class="proposal-title">Split Fold</span>
+      <span class="proposal-tag">DUOTONE</span>
+    </header>
+    <p class="proposal-desc">Hard duotone split. Cream left half = today's headline number (giant serif). Dark right half = meeting list. High-contrast editorial.</p>
+    <div class="mock">
+      <div class="m08">
+        <div class="left">
+          <div>
+            <div class="label">MEETINGS · TODAY</div>
+            <div class="num">04</div>
+            <div class="num-sub">2 done · 1 live · 1 queued</div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="n">35</div><div class="k">SQL</div></div>
+            <div class="stat"><div class="n">87%</div><div class="k">QUOTA</div></div>
+          </div>
+        </div>
+        <div class="right">
+          <div class="label">SCHEDULE</div>
+          <div class="e"><span class="t">09:30</span><span class="n" style="text-decoration:line-through;color:var(--paper-4);">Stand-up</span></div>
+          <div class="e"><span class="t">11:00</span><span class="n" style="text-decoration:line-through;color:var(--paper-4);">Acme</span></div>
+          <div class="e" style="border-color:var(--blue);"><span class="t" style="color:var(--blue);">13:30</span><span class="n" style="color:var(--paper);">Vesta · live</span></div>
+          <div class="e"><span class="t">15:00</span><span class="n">Northwind</span></div>
+          <div class="e"><span class="t">16:30</span><span class="n">Forge AI</span></div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 09 ORBITAL -->
+  <article class="proposal">
+    <header class="proposal-header">
+      <span class="proposal-num">09</span>
+      <span class="proposal-title">Orbital</span>
+      <span class="proposal-tag">RADIAL</span>
+    </header>
+    <p class="proposal-desc">Clock dial at the center, meeting chips orbiting on dashed rings positioned by their time. Spatial intuition - you read the day like a planetarium.</p>
+    <div class="mock">
+      <div class="m09">
+        <div class="ring outer"></div>
+        <div class="ring"></div>
+        <div class="center">
+          <div class="label">NOW</div>
+          <div class="time">13:18</div>
+          <div class="date">WED · 18 JUN</div>
+        </div>
+        <div class="chip" style="top:30px;left:80px;"><span class="led" style="background:var(--paper-4);box-shadow:0 0 4px var(--paper-4);"></span>09:30 · STAND-UP</div>
+        <div class="chip" style="top:60px;right:40px;"><span class="led" style="background:var(--paper-4);"></span>11:00 · ACME</div>
+        <div class="chip" style="bottom:80px;right:30px;"><span class="led" style="background:var(--blue);box-shadow:0 0 6px var(--blue);"></span>13:30 · VESTA</div>
+        <div class="chip" style="bottom:40px;left:50px;"><span class="led" style="background:var(--emerald);box-shadow:0 0 4px var(--emerald);"></span>15:00 · NORTHWIND</div>
+        <div class="chip" style="top:130px;left:14px;"><span class="led" style="background:var(--purple);"></span>16:30 · FORGE</div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 10 PAPERWORK -->
+  <article class="proposal">
+    <header class="proposal-header">
+      <span class="proposal-num">10</span>
+      <span class="proposal-title">Paperwork</span>
+      <span class="proposal-tag">DOCUMENT</span>
+    </header>
+    <p class="proposal-desc">Cream paper, typewriter mono, red CONFIDENTIAL stamp, dotted-line ledger rows. Anti-dashboard. Reads like a printed daily docket.</p>
+    <div class="mock">
+      <div class="m10">
+        <span class="stamp">LIVE</span>
+        <div class="doc-h">Daily Docket</div>
+        <div class="doc-sub">WED · 18 JUNE 2026 · S. SUBRA</div>
+        <div class="doc-rule"></div>
+        <div class="line"><span class="k">09:30</span><span><s>Internal stand-up</s></span></div>
+        <div class="line"><span class="k">11:00</span><span><s>Acme Corp · Discovery</s></span></div>
+        <div class="line" style="font-weight:600;color:#c1503f;"><span class="k">13:30</span><span>VESTA HEALTH · DEMO</span></div>
+        <div class="line"><span class="k">15:00</span><span>Northwind · Pricing</span></div>
+        <div class="line"><span class="k">16:30</span><span>Forge AI · Wrap-up</span></div>
+        <div class="footer"><span>FILE NO. CT-01</span><span>PAGE 1 / 1</span></div>
+      </div>
+    </div>
+  </article>
+
+</div>
+
+</body>
+</html>

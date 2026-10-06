@@ -1,0 +1,82 @@
+# === Dependencies ===
+node_modules/
+
+# === Build / output ===
+dist/
+dist-ssr/
+build/
+.vite/
+.next/
+out/
+coverage/
+
+# === Env / secrets (never commit) ===
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+*token*
+# The `*token*` rule above is for secrets. This one file is the design system
+# (colours, type scale, z-index) and is imported by the whole component tree,
+# so a clone will not build without it. Narrow exception, not a weakening.
+!src/lib/tokens.js
+
+# === Per-operator identity (never commit) ===
+# Real name, work email, HubSpot owner id. src/config.example.js is the tracked
+# template; npm postinstall copies it here on a fresh clone.
+src/config.js
+
+# === Customer PII (never commit) ===
+# Generated module data holds live HubSpot prospect names/emails/phones.
+# It is rebuilt locally each refresh - never tracked.
+src/modules/**/data.js
+# Editor/app backups routinely capture the same inline PII.
+*.bak
+*.bak-*
+# One-off full-app snapshots exported with prospect data embedded.
+*-App-snapshot.jsx
+# Bundler / typecheck scratch output. These inline the whole module graph with
+# data.js in it, so they carry the same prospect names, emails and thread URLs.
+# .cache-check.js was already listed under Local/cache; .esbuild-check.js was not,
+# and sat untracked-but-committable for two months. Glob both forms instead.
+*-check.js
+.*-check.js
+# Same output under the other naming habit: .check.js, .check-out.js (both on disk,
+# both untracked-but-committable, both full of prospect names and emails).
+.check*.js
+# Numbers mastersheet cache (carrier names, pricing, compliance text).
+public/numbers-data.csv
+# Generator input. Every refresh hands the generators a payload staged here, and
+# those payloads are the raw pull - deal names, prospect names, emails. They
+# survive the run on disk, so glob them rather than relying on cleanup.
+.tmp-*.json
+
+# === Logs ===
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# === Local / cache ===
+*.local
+.cache/
+.cache-check.js
+
+# === OS / editor cruft ===
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# visual brainstorm sessions
+.superpowers/
