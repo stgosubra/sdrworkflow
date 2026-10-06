@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your Pipeline - ACTION NEEDED</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --panel2:#f1f3f7; --line:#e6e9ef;
+    --txt:#141a24; --muted:#5b6675; --dim:#8b94a3;
+    --accent:#2f6bff; --accent-weak:#eaf0ff;
+    --hot:#e5484d; --warm:#d9730d; --cool:#2f6bff; --cold:#8b94a3;
+    --fresh:#0f9d58; --cooling:#c98a00; --stale:#d9730d; --urgent:#e5484d; --critical:#c0353a; --gone:#9aa3b2;
+    --shadow-sm:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+    --shadow-md:0 4px 14px rgba(16,24,40,.08);
+    --shadow-lg:0 12px 32px rgba(16,24,40,.16);
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.5 "Hanken Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .mono,.num{font-variant-numeric:tabular-nums}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1440px;margin:0 auto;padding:20px}
+  /* L2 layout */
+  .layout{display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start}
+  .sidebar{position:sticky;top:20px;display:flex;flex-direction:column;gap:16px;animation:rise .4s ease both}
+  .content{min-width:0;animation:rise .4s .06s ease both}
+  .brand h1{font-size:19px;font-weight:800;letter-spacing:-.01em;margin:0 0 4px}
+  .brand .sub{color:var(--muted);font-size:12px;line-height:1.5}
+  .brand .sub b{color:var(--txt);font-weight:600}
+  .side-filters{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-sm);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:12px}
+  .toolbar{position:sticky;top:20px;z-index:5;display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;background:var(--bg);padding:2px 0}
+  .table-card{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-sm);border-radius:var(--radius);overflow:hidden}
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media(max-width:900px){
+    .layout{grid-template-columns:1fr}
+    .sidebar{position:static}
+    .kpis{flex-direction:row!important;flex-wrap:wrap}
+    .kpi{flex:1 1 150px}
+    .toolbar{position:static}
+  }
+  /* KPI stack */
+  .kpis{display:flex;flex-direction:column;gap:10px}
+  .kpi{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-sm);border-radius:var(--radius);padding:13px 15px;cursor:pointer;transition:box-shadow .12s,border-color .12s,background .12s;text-align:left;width:100%}
+  .kpi:hover{box-shadow:var(--shadow-md);border-color:#d5dae4}
+  .kpi.active{border-color:var(--accent);background:var(--accent-weak);box-shadow:0 0 0 3px var(--accent-weak)}
+  .kpi .n{font-size:26px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+  .kpi .l{color:var(--muted);font-size:12px;margin-top:2px;font-weight:600}
+  .kpi .d{color:var(--dim);font-size:11px;margin-top:2px}
+  .kpi[data-kpi="qual"]{border-left:3px solid var(--hot)}
+  /* trend */
+  .trend{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-sm);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .trend .lab{color:var(--muted);font-size:12px}
+  .trend svg{display:block}
+  .trend .delta{font-weight:700;font-size:13px}
+  .up{color:var(--hot)} .down{color:var(--fresh)} .flat{color:var(--muted)}
+  /* controls */
+  .side-filters .fl{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+  input,select{background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:8px 10px;font-size:13px;outline:none;font-family:inherit;transition:border-color .12s,box-shadow .12s}
+  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
+  .tabs{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+  .tabs button{background:transparent;color:var(--muted);border:0;padding:6px 13px;cursor:pointer;font-size:13px;font-weight:600;border-radius:7px;font-family:inherit;transition:.12s}
+  .tabs button:hover{color:var(--txt)}
+  .tabs button.on{background:var(--panel);color:var(--txt);box-shadow:var(--shadow-sm)}
+  .toggle{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:13px;cursor:pointer;user-select:none}
+  .toggle input{accent-color:var(--accent)}
+  .spacer{flex:1}
+  /* table */
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;padding:11px 12px;background:var(--panel2);border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
+  th:hover{color:var(--txt)}
+  td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tbody tr:last-child td{border-bottom:0}
+  tr.row:hover{background:var(--bg)}
+  tr.snoozed{opacity:.5}
+  .lead-name{font-weight:700}
+  .country-cell{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .hotflag{display:inline-block;margin-left:6px;background:#fdecec;color:#c0353a;border:1px solid #f4c9c9;border-radius:999px;padding:1px 7px;font-size:10px;font-weight:700;letter-spacing:.03em;vertical-align:middle}
+  .dealflag{display:inline-block;margin-left:6px;background:#3a0d0f;color:#fff;border:1px solid #c0353a;border-radius:999px;padding:1px 7px;font-size:10px;font-weight:800;letter-spacing:.03em;vertical-align:middle}
+  .kpi[data-kpi="dealflag"]{border-left:3px solid #c0353a}
+  .kpi[data-kpi="dealflag"] .n{color:#c0353a}
+  /* engagement-tier cards mirror the section-header colours in the table below */
+  .kpi[data-kpi="tier:Working"]{border-left:3px solid var(--fresh)}
+  .kpi[data-kpi="tier:Lukewarm"]{border-left:3px solid var(--warm)}
+  .kpi[data-kpi="tier:Approached"]{border-left:3px solid var(--stale)}
+  tr.contacted{opacity:.45}
+  .selcol{width:28px;text-align:center}
+  .selcol input{accent-color:var(--accent);cursor:pointer}
+  .bulkbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--accent-weak);border:1px solid #cfe0ff;border-radius:10px;padding:8px 12px;margin-bottom:10px}
+  .bulkbar .cnt{font-weight:700;color:#1d4ed8}
+  .bulk-list{display:flex;flex-direction:column;gap:8px;margin:12px 0;max-height:52vh;overflow:auto}
+  .bulk-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:9px}
+  .bulk-item.done{opacity:.5}
+  .bulk-item .who{flex:1;min-width:0}
+  .bulk-item .who .nm{font-weight:700}
+  .bulk-item .who .em{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .langtag{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 5px}
+  .lead-co{color:var(--muted);font-size:12px}
+  .lead-meta{color:var(--dim);font-size:11px;margin-top:2px}
+  .pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600}
+  .status-NEW{background:var(--accent-weak);color:#1d4ed8}
+  .status-OPEN{background:#e5f5ea;color:#0f7a43}
+  .status-IN_PROGRESS{background:#fbf1d9;color:#9a6b00}
+  .status-Demo\ no\ show{background:#fdecec;color:#c0353a}
+  .status-Unable\ to\ Contact{background:#eef0f3;color:#5b6675}
+  .stale-fresh{color:var(--fresh)} .stale-cooling{color:var(--cooling)} .stale-stale{color:var(--stale)}
+  .stale-urgent{color:var(--urgent)} .stale-critical{color:var(--critical);font-weight:700} .stale-gone{color:var(--gone)}
+  .score{font-weight:800;font-size:16px;font-variant-numeric:tabular-nums}
+  .score-hot{color:var(--hot)} .score-warm{color:var(--warm)} .score-cool{color:var(--cool)} .score-cold{color:var(--cold)}
+  .bd{font-size:11px;color:var(--muted);margin-top:3px;max-width:260px;display:flex;flex-wrap:wrap;gap:1px 8px}
+  .bd span{white-space:nowrap;margin-right:8px}
+  .bd .pos{color:var(--fresh)} .bd .neg{color:var(--hot)}
+  .btn{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-sm);color:var(--txt);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;transition:.12s}
+  .btn:hover{border-color:#d5dae4;box-shadow:var(--shadow-md)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:#255ae0;border-color:#255ae0}
+  .btn.mini{padding:3px 8px;font-size:11px}
+  .actions{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+  .row-actions{display:flex;gap:5px;flex-wrap:wrap}
+  .sig{font-size:11px;color:var(--dim)}
+  /* modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(16,24,40,.35);display:flex;align-items:center;justify-content:center;z-index:50}
+  .modal{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-lg);border-radius:14px;padding:20px;width:min(620px,92vw);max-height:88vh;overflow:auto}
+  .modal h3{margin:0 0 10px;font-weight:700}
+  .modal textarea{width:100%;min-height:200px;background:var(--bg);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;font:13px/1.5 ui-monospace,monospace;resize:vertical}
+  .modal input[type=text]{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 10px;font-size:13px}
+  .modal .foot{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .close{float:right;background:none;border:0;color:var(--muted);font-size:18px;cursor:pointer}
+  .reasons{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+  .reasons button{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-sm);color:var(--txt);border-radius:999px;padding:5px 11px;font-size:12px;cursor:pointer;font-family:inherit}
+  .reasons button:hover{border-color:var(--accent)}
+  .empty{text-align:center;color:var(--muted);padding:50px}
+  .footnote{color:var(--dim);font-size:11px;margin-top:16px;line-height:1.6}
+  .section-header{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:22px 0 8px;display:flex;align-items:baseline;gap:10px}
+  .section-count{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .section-desc{font-size:11px;font-weight:500;color:var(--muted);text-transform:none;letter-spacing:0;font-style:italic}
+  .section-working{color:var(--fresh)}
+  .section-lukewarm{color:var(--warm)}
+  .section-approached{color:var(--stale)}
+  .table-card+.section-header{margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+const SNAPSHOT = /*__DATA__*/ {"snapshotDate":"2026-10-06T07:09:33.135Z","pullInstantMs":1791270573135,"total":45,"count":45,"contacts":[{"id":"251397765644","firstname":"marc","name":"marc SELLARES TELLA","email":"marc.sellares@veolia.com","finalCountry":"Spain","country":"Spain","seatBand":"251+","source":"PAID_SEARCH","mqlDate":"2026-09-28T09:55:26.988Z","createdate":"2026-09-28T09:52:10.799Z","lastActivity":"2026-09-28T10:36:06.735Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"3","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":7,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":251,"dealButNotQualified":false,"score":6.6,"breakdown":[{"l":"Lead freshness (7d since MQL)","p":3},{"l":"Seat size (251+)","p":2},{"l":"Paid search","p":0.3},{"l":"3 conversion events","p":1},{"l":"Valid company URL","p":0.3}],"segment":"hot","outreachLang":"es"},{"id":"251359516435","firstname":"Sanae","name":"Sanae El herrouki","email":"sanne@mirgroup.com.tr","finalCountry":"Belgium","country":"Belgium","seatBand":"2","source":"AI_REFERRALS","mqlDate":"2026-09-28T05:19:35.620Z","createdate":"2026-09-28T05:16:58.683Z","lastActivity":"2026-09-28T06:34:26.736Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"2","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-28T05:17:13.016Z","meetingBookedDefault":"No","salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":8,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":3.7,"breakdown":[{"l":"Lead freshness (8d since MQL)","p":3},{"l":"AI referral","p":0.5},{"l":"2 conversion events","p":0.7},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 8d)","p":-0.8}],"segment":"cool","outreachLang":"en"},{"id":"251301792580","firstname":"Yago","name":"Yago Villar Rodríguez","email":"yagovillar2013@kahoot.com","finalCountry":"Spain","country":"Spain","seatBand":"11-20","source":"PAID_SEARCH","mqlDate":"2026-09-27T20:29:04.037Z","createdate":"2026-09-27T20:24:06.079Z","lastActivity":"2026-09-28T06:30:10.459Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"1","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-27T20:24:22.381Z","meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":8,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":20,"dealButNotQualified":false,"score":4.1,"breakdown":[{"l":"Lead freshness (8d since MQL)","p":3},{"l":"Seat size (11-20)","p":1},{"l":"Paid search","p":0.3},{"l":"1 conversion event","p":0.3},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 8d)","p":-0.8}],"segment":"cool","outreachLang":"es"},{"id":"251283402792","firstname":"alexandru","name":"alexandru negrutz","email":"contact@cooploy.com","finalCountry":"Netherlands","country":"Netherlands","seatBand":"1-2","source":"SOCIAL_MEDIA","mqlDate":"2026-09-27T18:39:57.209Z","createdate":"2026-09-27T18:37:45.677Z","lastActivity":"2026-09-28T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"4","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-27T18:38:00.941Z","meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":7,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":4.3,"breakdown":[{"l":"Lead freshness (8d since MQL)","p":3},{"l":"4 conversion events","p":1},{"l":"Valid company URL","p":0.3}],"segment":"cool","outreachLang":"en"},{"id":"251223226478","firstname":"Roberto","name":"Roberto Soblechero Sanz","email":"info@calderassegovia.es","finalCountry":"Spain","country":"Spain","seatBand":"3-10","source":"PAID_SEARCH","mqlDate":"2026-09-27T09:38:18.545Z","createdate":"2026-09-27T09:35:52.472Z","lastActivity":"2026-09-28T12:36:07Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"2","qualCallDate":"2026-09-28T12:30:00Z","qualCallMeetingSetDate":"2026-09-27T09:36:06.887Z","meetingBookedDefault":"Yes","salesEmailLastReplied":null,"hasModjoNote":true,"hasDeal":false,"staleDays":7,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":true,"seatRank":10,"dealButNotQualified":false,"score":8.8,"breakdown":[{"l":"Qual call held - proposal sent","p":4},{"l":"Lead freshness (8d since MQL)","p":3},{"l":"Seat size (3-10)","p":0.5},{"l":"Paid search","p":0.3},{"l":"2 conversion events","p":0.7},{"l":"Valid company URL","p":0.3}],"segment":"hot","outreachLang":"es"},{"id":"251157777669","firstname":"sfsdfs","name":"sfsdfs sdfsdfsf","email":"smurfaccninja@nigga.com","finalCountry":"Spain","country":"Spain","seatBand":"251+","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-26T23:03:49.307Z","createdate":"2026-09-26T23:00:24.463Z","lastActivity":"2026-09-28T06:33:41.443Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"3","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":8,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":251,"dealButNotQualified":false,"score":6.5,"breakdown":[{"l":"Lead freshness (9d since MQL)","p":3},{"l":"Seat size (251+)","p":2},{"l":"Direct visit","p":1},{"l":"3 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 8d)","p":-0.8}],"segment":"hot","outreachLang":"es"},{"id":"251144560274","firstname":"Enzo","name":"Enzo LEROY","email":"enzo.leroy@ac-louispasteur.cc.cd","finalCountry":"France","country":"France","seatBand":"3-10","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-26T19:43:28.185Z","createdate":"2026-09-26T19:40:08.331Z","lastActivity":"2026-09-28T06:32:50.496Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"2","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":8,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":4.7,"breakdown":[{"l":"Lead freshness (9d since MQL)","p":3},{"l":"Seat size (3-10)","p":0.5},{"l":"Direct visit","p":1},{"l":"2 conversion events","p":0.7},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 8d)","p":-0.8}],"segment":"warm","outreachLang":"fr"},{"id":"250833436284","firstname":"Lokesh","name":"Lokesh Basu","email":"lokesh@rivane.ai","finalCountry":"India","country":"India","seatBand":"3-10","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-25T06:08:45.924Z","createdate":"2026-09-25T06:06:31.471Z","lastActivity":"2026-09-28T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"4","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-25T06:06:48.727Z","meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":7,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":5.8,"breakdown":[{"l":"Lead freshness (11d since MQL)","p":3},{"l":"Seat size (3-10)","p":0.5},{"l":"Direct visit","p":1},{"l":"4 conversion events","p":1},{"l":"Valid company URL","p":0.3}],"segment":"warm","outreachLang":"en"},{"id":"250818583118","firstname":"dwad","name":"dwad dwdadw","email":"jaydenosauders@rich.com","finalCountry":"Netherlands","country":"Netherlands","seatBand":"3-10","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-25T03:18:54.651Z","createdate":"2026-09-25T03:15:31.739Z","lastActivity":"2026-09-28T06:35:59.982Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"4","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":8,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":5,"breakdown":[{"l":"Lead freshness (11d since MQL)","p":3},{"l":"Seat size (3-10)","p":0.5},{"l":"Direct visit","p":1},{"l":"4 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 8d)","p":-0.8}],"segment":"warm","outreachLang":"en"},{"id":"250718037878","firstname":"Kayla","name":"Kayla Sloss","email":"kaylasloss182@proton.com","finalCountry":"Australia","country":"Australia","seatBand":"3-10","source":"ORGANIC_SEARCH","mqlDate":"2026-09-24T19:47:54.683Z","createdate":"2026-09-24T19:44:57.783Z","lastActivity":"2026-09-25T09:36:57.176Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"3","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-24T19:45:15.034Z","meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":10,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":4.6,"breakdown":[{"l":"Lead freshness (11d since MQL)","p":3},{"l":"Seat size (3-10)","p":0.5},{"l":"Organic search","p":0.6},{"l":"3 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 10d)","p":-0.8}],"segment":"warm","outreachLang":"en"},{"id":"246435646380","firstname":"Billy","name":"Billy BI","email":"support@voixel.xyz","finalCountry":"United Kingdom","country":"United Kingdom","seatBand":"251+","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-24T13:18:44.298Z","createdate":"2026-09-24T13:14:49.702Z","lastActivity":"2026-09-24T13:22:47.484Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"4","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":11,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":251,"dealButNotQualified":false,"score":6.5,"breakdown":[{"l":"Lead freshness (11d since MQL)","p":3},{"l":"Seat size (251+)","p":2},{"l":"Direct visit","p":1},{"l":"4 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 11d)","p":-0.8}],"segment":"hot","outreachLang":"en"},{"id":"250473845530","firstname":"Rishabh","name":"Rishabh Jain","email":"rishabh.jain@grexa.ai","finalCountry":"India","country":"India","seatBand":"3-10","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-23T22:00:43.237Z","createdate":"2026-09-23T21:57:30.964Z","lastActivity":"2026-09-24T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"6","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-23T21:57:48.765Z","meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":11,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":5,"breakdown":[{"l":"Lead freshness (12d since MQL)","p":3},{"l":"Seat size (3-10)","p":0.5},{"l":"Direct visit","p":1},{"l":"6 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 11d)","p":-0.8}],"segment":"warm","outreachLang":"en"},{"id":"250356225660","firstname":"Andrew","name":"Andrew Devlin","email":"andrew@onemore.health","finalCountry":"United Kingdom","country":"United Kingdom","seatBand":"3-10","source":"ORGANIC_SEARCH","mqlDate":"2026-09-23T15:22:07.526Z","createdate":"2026-09-23T15:18:35.529Z","lastActivity":"2026-09-24T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"4","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":11,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":4.6,"breakdown":[{"l":"Lead freshness (12d since MQL)","p":3},{"l":"Seat size (3-10)","p":0.5},{"l":"Organic search","p":0.6},{"l":"4 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 11d)","p":-0.8}],"segment":"warm","outreachLang":"en"},{"id":"250326232647","firstname":"Andrea","name":"Andrea Estrada Castillo","email":"andreacecilia.estrada@eae.es","finalCountry":"Spain","country":"Spain","seatBand":"3-10","source":"AI_REFERRALS","mqlDate":"2026-09-23T14:33:52.196Z","createdate":"2026-09-23T14:28:21.369Z","lastActivity":"2026-09-28T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"3","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":7,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":5.3,"breakdown":[{"l":"Lead freshness (12d since MQL)","p":3},{"l":"Seat size (3-10)","p":0.5},{"l":"AI referral","p":0.5},{"l":"3 conversion events","p":1},{"l":"Valid company URL","p":0.3}],"segment":"warm","outreachLang":"es"},{"id":"231083513693","firstname":"Alex","name":"Alex Doc","email":"adrian@hvtours.ro","finalCountry":"Romania","country":"Romania","seatBand":"3-10","source":"ORGANIC_SEARCH","mqlDate":"2026-09-23T11:13:47.041Z","createdate":"2026-09-23T11:10:13.547Z","lastActivity":"2026-09-28T10:59:00.910Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"3","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":7,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":5.4,"breakdown":[{"l":"Lead freshness (12d since MQL)","p":3},{"l":"Seat size (3-10)","p":0.5},{"l":"Organic search","p":0.6},{"l":"3 conversion events","p":1},{"l":"Valid company URL","p":0.3}],"segment":"warm","outreachLang":"en"},{"id":"250270013078","firstname":"Andrés","name":"Andrés Acebes","email":"andresacebes@renthas.com","finalCountry":"Spain","country":"Spain","seatBand":"3-10","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-23T10:07:15.181Z","createdate":"2026-09-23T10:03:57.880Z","lastActivity":"2026-09-24T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"1","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":11,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":4.3,"breakdown":[{"l":"Lead freshness (12d since MQL)","p":3},{"l":"Seat size (3-10)","p":0.5},{"l":"Direct visit","p":1},{"l":"1 conversion event","p":0.3},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 11d)","p":-0.8}],"segment":"cool","outreachLang":"es"},{"id":"250274381350","firstname":"Somak","name":"Somak Roy","email":"somak@maximl.com","finalCountry":"India","country":"India","seatBand":"1-2","source":"PAID_SEARCH","mqlDate":"2026-09-23T09:26:13.959Z","createdate":"2026-09-23T09:19:30.365Z","lastActivity":"2026-09-28T11:49:00.692Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"9","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-23T09:25:23.610Z","meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":7,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":4.6,"breakdown":[{"l":"Lead freshness (12d since MQL)","p":3},{"l":"Paid search","p":0.3},{"l":"9 conversion events","p":1},{"l":"Valid company URL","p":0.3}],"segment":"warm","outreachLang":"en"},{"id":"250150578756","firstname":"Mazhar","name":"Mazhar Manzoor","email":"info@wiselinksolution.com","finalCountry":"Pakistan","country":"Pakistan","seatBand":"3-10","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-22T20:29:23.559Z","createdate":"2026-09-22T20:26:43.152Z","lastActivity":"2026-09-28T11:59:02.391Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"1","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-22T20:27:01.088Z","meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":7,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":5.1,"breakdown":[{"l":"Lead freshness (13d since MQL)","p":3},{"l":"Seat size (3-10)","p":0.5},{"l":"Direct visit","p":1},{"l":"1 conversion event","p":0.3},{"l":"Valid company URL","p":0.3}],"segment":"warm","outreachLang":"en"},{"id":"250097975308","firstname":"Avinash","name":"Avinash Shankar","email":"avinash@pana.space","finalCountry":"India","country":"India","seatBand":"3-10","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-22T19:37:30.316Z","createdate":"2026-09-22T19:34:45.559Z","lastActivity":"2026-09-28T07:31:02.216Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"3","qualCallDate":"2026-09-24T12:00:00Z","qualCallMeetingSetDate":"2026-09-22T19:35:05.779Z","meetingBookedDefault":"Yes","salesEmailLastReplied":null,"hasModjoNote":true,"hasDeal":false,"staleDays":7,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":true,"seatRank":10,"dealButNotQualified":false,"score":9.8,"breakdown":[{"l":"Qual call held - proposal sent","p":4},{"l":"Lead freshness (13d since MQL)","p":3},{"l":"Seat size (3-10)","p":0.5},{"l":"Direct visit","p":1},{"l":"3 conversion events","p":1},{"l":"Valid company URL","p":0.3}],"segment":"hot","outreachLang":"en"},{"id":"250077640117","firstname":"David","name":"David Stencl","email":"david@repitgym.com","finalCountry":"Slovakia","country":"Slovakia","seatBand":"1-2","source":"PAID_SEARCH","mqlDate":"2026-09-22T18:30:21.770Z","createdate":"2026-09-22T18:29:40.922Z","lastActivity":"2026-09-25T10:33:59.615Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"8","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":10,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":3.8,"breakdown":[{"l":"Lead freshness (13d since MQL)","p":3},{"l":"Paid search","p":0.3},{"l":"8 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 10d)","p":-0.8}],"segment":"cool","outreachLang":"en"},{"id":"250065601405","firstname":"Nawal","name":"Nawal CHABO","email":"nawal.chabo@tdah-france.fr","finalCountry":"France","country":"France","seatBand":"2","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-22T17:34:14.621Z","createdate":"2026-09-22T17:31:31.651Z","lastActivity":"2026-09-28T09:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"1","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-28T06:18:02.604Z","meetingBookedDefault":"No","salesEmailLastReplied":"2026-09-28T06:17:50Z","hasModjoNote":false,"hasDeal":false,"staleDays":7,"hasBookedMeeting":true,"hasEmailReply":true,"engagementTier":"Working","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":4.6,"breakdown":[{"l":"Lead freshness (13d since MQL)","p":3},{"l":"Direct visit","p":1},{"l":"1 conversion event","p":0.3},{"l":"Valid company URL","p":0.3}],"segment":"warm","outreachLang":"fr"},{"id":"249942416275","firstname":"Mohammed Awad","name":"Mohammed Awad Mohammed","email":"hello@middlebridgeuk.com","finalCountry":"United Kingdom","country":"United Kingdom","seatBand":"2","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-22T11:45:52.257Z","createdate":"2026-09-22T11:43:16.573Z","lastActivity":"2026-09-28T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"3","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-22T11:43:34.349Z","meetingBookedDefault":"No","salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":7,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":5.3,"breakdown":[{"l":"Lead freshness (13d since MQL)","p":3},{"l":"Direct visit","p":1},{"l":"3 conversion events","p":1},{"l":"Valid company URL","p":0.3}],"segment":"warm","outreachLang":"en"},{"id":"249928661591","firstname":"boucquiaux","name":"boucquiaux Asphadèle","email":"boucquiaux.asphadele@ehpn.province.namur.be","finalCountry":"Belgium","country":"Belgium","seatBand":"2","source":"PAID_SEARCH","mqlDate":"2026-09-22T09:26:41.446Z","createdate":"2026-09-22T09:24:00.073Z","lastActivity":"2026-09-23T15:03:49Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"3","qualCallDate":"2026-09-23T14:00:00Z","qualCallMeetingSetDate":"2026-09-22T09:24:16.707Z","meetingBookedDefault":"Yes","salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":12,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":3.8,"breakdown":[{"l":"Lead freshness (13d since MQL)","p":3},{"l":"Paid search","p":0.3},{"l":"3 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 12d)","p":-0.8}],"segment":"cool","outreachLang":"en"},{"id":"249927133074","firstname":"Byzed","name":"Byzed Amin","email":"info@edusofto.com.bd","finalCountry":"Bangladesh","country":"Bangladesh","seatBand":"21-50","source":"ORGANIC_SEARCH","mqlDate":"2026-09-22T08:44:18.968Z","createdate":"2026-09-22T08:40:35.529Z","lastActivity":"2026-09-28T07:49:59.813Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"4","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":7,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":50,"dealButNotQualified":false,"score":6.4,"breakdown":[{"l":"Lead freshness (13d since MQL)","p":3},{"l":"Seat size (21-50)","p":1.5},{"l":"Organic search","p":0.6},{"l":"4 conversion events","p":1},{"l":"Valid company URL","p":0.3}],"segment":"warm","outreachLang":"en"},{"id":"249910802487","firstname":"Markus","name":"Markus Ederwall","email":"markus.ederwall@marianila.se","finalCountry":"Sweden","country":"Sweden","seatBand":"1-2","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-22T07:53:56.289Z","createdate":"2026-09-22T07:50:08.964Z","lastActivity":"2026-09-25T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"2","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":"2026-09-25T11:01:11Z","hasModjoNote":false,"hasDeal":false,"staleDays":10,"hasBookedMeeting":false,"hasEmailReply":true,"engagementTier":"Lukewarm","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":4.2,"breakdown":[{"l":"Lead freshness (13d since MQL)","p":3},{"l":"Direct visit","p":1},{"l":"2 conversion events","p":0.7},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 10d)","p":-0.8}],"segment":"cool","outreachLang":"en"},{"id":"249915923004","firstname":"Sohail","name":"Sohail Khan","email":"ssohail.khaan@kombee.com","finalCountry":"India","country":"India","seatBand":"2","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-22T07:27:05.681Z","createdate":"2026-09-22T07:24:27.965Z","lastActivity":"2026-09-25T10:30:05.082Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"2","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-22T07:24:44.206Z","meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":10,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":4.2,"breakdown":[{"l":"Lead freshness (13d since MQL)","p":3},{"l":"Direct visit","p":1},{"l":"2 conversion events","p":0.7},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 10d)","p":-0.8}],"segment":"cool","outreachLang":"en"},{"id":"249920704262","firstname":"medo","name":"medo nahhal","email":"brunopim@softdailyguide.com","finalCountry":"Israel","country":"Israel","seatBand":"101-250","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-22T07:22:13.052Z","createdate":"2026-09-22T07:18:58.651Z","lastActivity":"2026-09-22T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"1","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":13,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":250,"dealButNotQualified":false,"score":5.8,"breakdown":[{"l":"Lead freshness (13d since MQL)","p":3},{"l":"Seat size (101-250)","p":2},{"l":"Direct visit","p":1},{"l":"1 conversion event","p":0.3},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 13d)","p":-0.8}],"segment":"warm","outreachLang":"en"},{"id":"249818514702","firstname":"Rasmus","name":"Rasmus Hauta-Aho","email":"rasmus@vandall.com","finalCountry":"Estonia","country":"Estonia","seatBand":"2","source":"AI_REFERRALS","mqlDate":"2026-09-21T19:32:50.192Z","createdate":"2026-09-21T19:30:12.802Z","lastActivity":"2026-09-25T13:06:09.645Z","status":"Demo no show","emailClick":null,"emailOpen":null,"convEvents":"2","qualCallDate":"2026-09-25T13:00:00Z","qualCallMeetingSetDate":"2026-09-21T19:30:37.180Z","meetingBookedDefault":"Yes","salesEmailLastReplied":null,"hasModjoNote":true,"hasDeal":false,"staleDays":10,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":true,"seatRank":2,"dealButNotQualified":false,"score":6.7,"breakdown":[{"l":"Qual call held - proposal sent","p":4},{"l":"Lead freshness (14d since MQL)","p":2},{"l":"AI referral","p":0.5},{"l":"2 conversion events","p":0.7},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 10d)","p":-0.8}],"segment":"hot","outreachLang":"en"},{"id":"249796186180","firstname":"muharrem enes","name":"muharrem enes ercan","email":"info@katalogpro.org","finalCountry":"Turkey","country":"Turkey","seatBand":"51-100","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-21T18:09:02.346Z","createdate":"2026-09-21T18:05:46.798Z","lastActivity":"2026-09-23T21:59:59.999Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"1","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":12,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":100,"dealButNotQualified":false,"score":4.8,"breakdown":[{"l":"Lead freshness (14d since MQL)","p":2},{"l":"Seat size (51-100)","p":2},{"l":"Direct visit","p":1},{"l":"1 conversion event","p":0.3},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 12d)","p":-0.8}],"segment":"warm","outreachLang":"en"},{"id":"249775129397","firstname":"David","name":"David Parker","email":"hamza.aftab@dydcommunications.com","finalCountry":"Pakistan","country":"Pakistan","seatBand":"11-20","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-21T16:32:35.999Z","createdate":"2026-09-21T16:29:06.969Z","lastActivity":"2026-09-24T14:14:06.395Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"3","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":11,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":20,"dealButNotQualified":false,"score":4.5,"breakdown":[{"l":"Lead freshness (14d since MQL)","p":2},{"l":"Seat size (11-20)","p":1},{"l":"Direct visit","p":1},{"l":"3 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 11d)","p":-0.8}],"segment":"warm","outreachLang":"en"},{"id":"249761524096","firstname":"lana","name":"lana abuessa","email":"info@roofflowsystem.com","finalCountry":"Netherlands","country":"Netherlands","seatBand":"3-10","source":"PAID_SEARCH","mqlDate":"2026-09-21T15:25:06.927Z","createdate":"2026-09-21T15:21:56.704Z","lastActivity":"2026-09-24T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"6","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":11,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":3.3,"breakdown":[{"l":"Lead freshness (14d since MQL)","p":2},{"l":"Seat size (3-10)","p":0.5},{"l":"Paid search","p":0.3},{"l":"6 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 11d)","p":-0.8}],"segment":"cool","outreachLang":"en"},{"id":"249729719372","firstname":"giussepe","name":"giussepe tarantini","email":"admnistracion@rosgipi.es","finalCountry":"Spain","country":"Spain","seatBand":"3-10","source":"AI_REFERRALS","mqlDate":"2026-09-21T12:43:20.231Z","createdate":"2026-09-21T12:40:05.087Z","lastActivity":"2026-09-21T12:47:19.670Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"5","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":14,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":3.5,"breakdown":[{"l":"Lead freshness (14d since MQL)","p":2},{"l":"Seat size (3-10)","p":0.5},{"l":"AI referral","p":0.5},{"l":"5 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 14d)","p":-0.8}],"segment":"cool","outreachLang":"es"},{"id":"247125597776","firstname":"Roman","name":"Roman Perez","email":"rperez@amavir.es","finalCountry":"Spain","country":"Spain","seatBand":"3-10","source":"PAID_SEARCH","mqlDate":"2026-09-21T10:53:31.454Z","createdate":"2026-09-21T10:50:53.062Z","lastActivity":"2026-09-23T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"1","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-21T10:51:10.839Z","meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":12,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":2.6,"breakdown":[{"l":"Lead freshness (14d since MQL)","p":2},{"l":"Seat size (3-10)","p":0.5},{"l":"Paid search","p":0.3},{"l":"1 conversion event","p":0.3},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 12d)","p":-0.8}],"segment":"cool","outreachLang":"es"},{"id":"249712611617","firstname":"Vantra","name":"Vantra Labz","email":"hello@vantralabz.com","finalCountry":"Pakistan","country":"Pakistan","seatBand":"3-10","source":"ORGANIC_SEARCH","mqlDate":"2026-09-21T10:26:50.433Z","createdate":"2026-09-21T10:23:23.703Z","lastActivity":"2026-09-24T14:04:00.047Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"3","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":11,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":3.6,"breakdown":[{"l":"Lead freshness (14d since MQL)","p":2},{"l":"Seat size (3-10)","p":0.5},{"l":"Organic search","p":0.6},{"l":"3 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 11d)","p":-0.8}],"segment":"cool","outreachLang":"en"},{"id":"249701851312","firstname":"Matas","name":"Matas Malinauskas","email":"m.malinauskas@vitlaima.lt","finalCountry":"Lithuania","country":"Lithuania","seatBand":"1-2","source":"PAID_SEARCH","mqlDate":"2026-09-22T06:00:20.993Z","createdate":"2026-09-21T09:04:59.497Z","lastActivity":"2026-09-28T11:47:01.626Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"1","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":7,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":2.9,"breakdown":[{"l":"Lead freshness (14d since MQL)","p":2},{"l":"Paid search","p":0.3},{"l":"1 conversion event","p":0.3},{"l":"Valid company URL","p":0.3}],"segment":"cool","outreachLang":"en"},{"id":"249210850435","firstname":"Емил","name":"Емил Димитров","email":"office@luxalent.com","finalCountry":"Bulgaria","country":"Bulgaria","seatBand":"1-2","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-21T03:37:23.700Z","createdate":"2026-09-18T10:38:55.880Z","lastActivity":"2026-09-24T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"2","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":11,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":3.2,"breakdown":[{"l":"Lead freshness (15d since MQL)","p":2},{"l":"Direct visit","p":1},{"l":"2 conversion events","p":0.7},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 11d)","p":-0.8}],"segment":"cool","outreachLang":"en"},{"id":"248793965394","firstname":"Deepanki","name":"Deepanki Kapoor","email":"deepanki.kapoor@faveohelpdesk.com","finalCountry":"India","country":"India","seatBand":"2","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-16T07:47:03.878Z","createdate":"2026-09-16T07:44:06.041Z","lastActivity":"2026-09-16T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"1","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-16T07:44:36.057Z","meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":19,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":2.1,"breakdown":[{"l":"Lead freshness (19d since MQL)","p":2},{"l":"Direct visit","p":1},{"l":"1 conversion event","p":0.3},{"l":"Valid company URL","p":0.3},{"l":"Staleness (stale: 19d)","p":-1.5}],"segment":"cold","outreachLang":"en"},{"id":"248580127239","firstname":"Ruben","name":"Ruben Rapi","email":"contact@aneva.se","finalCountry":"Sweden","country":"Sweden","seatBand":"1-2","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-15T08:35:59.428Z","createdate":"2026-09-15T08:31:49.831Z","lastActivity":"2026-09-15T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"6","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":20,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":2.8,"breakdown":[{"l":"Lead freshness (20d since MQL)","p":2},{"l":"Direct visit","p":1},{"l":"6 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (stale: 20d)","p":-1.5}],"segment":"cool","outreachLang":"en"},{"id":"248420114217","firstname":"Pasupuleti","name":"Pasupuleti Rohan","email":"rohan@megaboa.com","finalCountry":"India","country":"India","seatBand":"1-2","source":"OTHER_CAMPAIGNS","mqlDate":"2026-09-14T19:07:15.853Z","createdate":"2026-09-14T14:20:53.390Z","lastActivity":"2026-09-21T13:01:46Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"9","qualCallDate":"2026-09-21T12:30:00Z","qualCallMeetingSetDate":"2026-09-14T19:06:31.347Z","meetingBookedDefault":"Yes","salesEmailLastReplied":null,"hasModjoNote":true,"hasDeal":false,"staleDays":14,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":true,"seatRank":2,"dealButNotQualified":false,"score":6.5,"breakdown":[{"l":"Qual call held - proposal sent","p":4},{"l":"Lead freshness (21d since MQL)","p":2},{"l":"9 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 14d)","p":-0.8}],"segment":"hot","outreachLang":"en"},{"id":"237941795084","firstname":"tarık","name":"tarık aktas","email":"tarik.aktas@enteryazilim.com.tr","finalCountry":"Turkey","country":"Turkey","seatBand":"11-20","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-14T13:34:04.692Z","createdate":"2026-09-14T13:30:19.969Z","lastActivity":"2026-09-14T19:00:52.945Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"3","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":21,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":20,"dealButNotQualified":false,"score":3.8,"breakdown":[{"l":"Lead freshness (21d since MQL)","p":2},{"l":"Seat size (11-20)","p":1},{"l":"Direct visit","p":1},{"l":"3 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (stale: 21d)","p":-1.5}],"segment":"cool","outreachLang":"en"},{"id":"248369167273","firstname":"Ansh","name":"Ansh Dixit","email":"ansh@veltmtours.com","finalCountry":"India","country":"United Arab Emirates","seatBand":"3-10","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-14T08:08:52.978Z","createdate":"2026-09-14T08:06:28.930Z","lastActivity":"2026-09-17T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"7","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-14T08:08:04.577Z","meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":18,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":3.3,"breakdown":[{"l":"Lead freshness (21d since MQL)","p":2},{"l":"Seat size (3-10)","p":0.5},{"l":"Direct visit","p":1},{"l":"7 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (stale: 18d)","p":-1.5}],"segment":"cool","outreachLang":"en"},{"id":"248364286051","firstname":"Vladimir","name":"Vladimir Deak","email":"info@xm-sky.eu","finalCountry":"Slovakia","country":"Slovakia","seatBand":"3-10","source":"ORGANIC_SEARCH","mqlDate":"2026-09-14T07:42:43.858Z","createdate":"2026-09-14T07:39:28.785Z","lastActivity":"2026-09-15T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"6","qualCallDate":null,"qualCallMeetingSetDate":null,"meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":20,"hasBookedMeeting":false,"hasEmailReply":false,"engagementTier":"Approached","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":2.9,"breakdown":[{"l":"Lead freshness (21d since MQL)","p":2},{"l":"Seat size (3-10)","p":0.5},{"l":"Organic search","p":0.6},{"l":"6 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (stale: 20d)","p":-1.5}],"segment":"cool","outreachLang":"en"},{"id":"248257035116","firstname":"Sawera","name":"Sawera Shaikh","email":"info@saweradigitglobal.com","finalCountry":"Pakistan","country":"pakistan","seatBand":"3-10","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-14T01:07:23.122Z","createdate":"2026-09-14T01:02:08.570Z","lastActivity":"2026-09-21T15:00:00Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"11","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-14T01:02:28.996Z","meetingBookedDefault":null,"salesEmailLastReplied":null,"hasModjoNote":false,"hasDeal":false,"staleDays":14,"hasBookedMeeting":true,"hasEmailReply":false,"engagementTier":"Working","hasQual":false,"seatRank":10,"dealButNotQualified":false,"score":4,"breakdown":[{"l":"Lead freshness (22d since MQL)","p":2},{"l":"Seat size (3-10)","p":0.5},{"l":"Direct visit","p":1},{"l":"11 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 14d)","p":-0.8}],"segment":"cool","outreachLang":"en"},{"id":"248290858678","firstname":"Ziad","name":"Ziad Khayyat","email":"ziad@talentro.co","finalCountry":"Jordan","country":"Jordan","seatBand":"1-2","source":"DIRECT_TRAFFIC","mqlDate":"2026-09-15T18:27:38.363Z","createdate":"2026-09-13T20:01:57.646Z","lastActivity":"2026-09-24T10:04:48.768Z","status":"OPEN","emailClick":"1","emailOpen":"1","convEvents":"14","qualCallDate":"2026-09-18T13:30:00Z","qualCallMeetingSetDate":"2026-09-13T20:02:14.220Z","meetingBookedDefault":"Yes","salesEmailLastReplied":"2026-09-24T09:29:34Z","hasModjoNote":true,"hasDeal":true,"staleDays":11,"hasBookedMeeting":true,"hasEmailReply":true,"engagementTier":"Working","hasQual":true,"seatRank":2,"dealButNotQualified":true,"score":8.4,"breakdown":[{"l":"Qual call held - proposal sent","p":4},{"l":"Lead freshness (20d since MQL)","p":2},{"l":"Direct visit","p":1},{"l":"1 link click","p":0.8},{"l":"1 email open","p":0.1},{"l":"14 conversion events","p":1},{"l":"Valid company URL","p":0.3},{"l":"Staleness (cooling: 11d)","p":-0.8}],"segment":"hot","outreachLang":"en"},{"id":"248084648799","firstname":"Priska","name":"Priska Fernandes","email":"priska@mobylx.com","finalCountry":"United Arab Emirates","country":"United Arab Emirates","seatBand":"1-2","source":"REFERRALS","mqlDate":"2026-09-24T06:39:29.463Z","createdate":"2026-09-12T09:30:56.549Z","lastActivity":"2026-09-28T09:24:59Z","status":"OPEN","emailClick":null,"emailOpen":null,"convEvents":"6","qualCallDate":null,"qualCallMeetingSetDate":"2026-09-24T06:38:42.249Z","meetingBookedDefault":"No","salesEmailLastReplied":"2026-09-28T09:24:59Z","hasModjoNote":false,"hasDeal":false,"staleDays":7,"hasBookedMeeting":true,"hasEmailReply":true,"engagementTier":"Working","hasQual":false,"seatRank":2,"dealButNotQualified":false,"score":5.1,"breakdown":[{"l":"Lead freshness (12d since MQL)","p":3},{"l":"Referral","p":0.8},{"l":"6 conversion events","p":1},{"l":"Valid company URL","p":0.3}],"segment":"warm","outreachLang":"en"}],"_guardWarnings":["GUARD_WARN: count 45 outside 80-160 expected range"]};
+const PORTAL_ID = 6195055;
+const FREE_DOMAINS = new Set(['gmail.com','yahoo.com','hotmail.com','outlook.com','live.com','msn.com','aol.com','icloud.com','me.com','mac.com','proton.me','protonmail.com','mail.com','mail.ru','yandex.ru','gmx.com','zoho.com','qq.com','163.com','126.com','web.de','laposte.net','orange.fr','free.fr','sfr.fr','wanadoo.fr','personal.com']);
+const NOW = new Date(SNAPSHOT.snapshotDate).getTime();
+
+// ---- helpers ----
+const daysSince = iso => { if(!iso) return null; const t=new Date(iso).getTime(); return isNaN(t)?null:Math.floor((NOW-t)/86400000); };
+const fmtDate = iso => { if(!iso) return '—'; const d=new Date(iso); return isNaN(d)?'—':d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); };
+const fmtAge = d => d===null?'never active':d===0?'today':d===1?'1d ago':d+'d ago';
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const flagEmoji = country => ({'France':'🇫🇷','Spain':'🇪🇸'})[country] || '🌍';
+const deriveUrl = c => { if(!c.email) return ''; const d=c.email.split('@')[1]?.toLowerCase(); return (!d||FREE_DOMAINS.has(d))?'':'https://'+d; };
+const hsUrl = id => `https://app.hubspot.com/contacts/${PORTAL_ID}/contact/${id}`;
+
+const STATUS_LABEL = {NEW:'New','OPEN':'Approached','IN_PROGRESS':'Working','Demo no show':'Demo no show','Unable to Contact':'Did not manage to contact'};
+
+/*__SHARED_TIER_START__*/
+function stalenessTier(d){
+  if(d===null) return {tier:'never',label:'never active',penalty:-2.0,cls:'stale-gone'};
+  if(d<=7)  return {tier:'fresh',label:d+'d ago',penalty:0,cls:'stale-fresh'};
+  if(d<=14) return {tier:'cooling',label:d+'d ago',penalty:-0.8,cls:'stale-cooling'};
+  if(d<=21) return {tier:'stale',label:d+'d ago',penalty:-1.5,cls:'stale-stale'};
+  if(d<=30) return {tier:'urgent',label:d+'d ago',penalty:-2.0,cls:'stale-urgent'};
+  if(d<=45) return {tier:'critical',label:d+'d ago',penalty:-2.5,cls:'stale-critical'};
+  return {tier:'gone',label:d+'d ago',penalty:-3.5,cls:'stale-gone'};
+}
+/*__SHARED_TIER_END__*/
+
+
+/*__SHARED_COPY_START__*/
+// CALENDAR LINK - deliberately NOT in the copy. The Gmail compose URL's &body= is plain text only:
+// it cannot carry a hyperlink or italics, and any markup marker (_x_, *x*, [x](url)) renders
+// literally in the draft. So each body ends on a bare localized call-to-action word on its own line
+// (Book here / Reservez ici / Reserva aqui) which Santiago selects in Gmail and links + italicizes
+// by hand. Do NOT "helpfully" paste the scheduler URL back in - per Santiago 2026-08-25.
+const BOOK = { en: 'Book here', fr: 'Réservez ici', es: 'Reserva aquí' };
+
+// Post-Qual follow-up copy, language-routed. Applies to the Post-Qual segment only.
+// FR uses formal register (vous); ES uses informal register (tu). Deliberate per market.
+// Signed off by Santiago Subra 2026-07-06. Used by the in-app compose link and Plan 4 auto-drafts.
+
+const POST_QUAL = {
+  en: {
+    subject: 'Following up after our call - CloudTalk',
+    body: name => `Hi ${name},
+
+Just wanted to follow up on the project after our call.
+
+Is this still something of serious consideration?
+
+If any questions came up on your end in the meantime, feel free to send them over and I'll clear them up.
+
+A quick demo is also useful to clarify any grey areas - let me know if you'd be open to a quick interface run-through this week.
+
+Best`
+  },
+  fr: {
+    subject: 'Suite à notre échange - CloudTalk',
+    body: name => `Bonjour ${name},
+
+J'espère que vous allez bien.
+
+Avez-vous eu le temps de réfléchir aux solutions évoquées pour votre configuration ?
+
+Si le sujet est toujours d'actualité, je serais ravi de vous organiser une démo plus adaptée et de vous mettre en relation avec l'un de nos experts techniques, afin de vous montrer concrètement comment l'outil répond à vos besoins.
+
+Je reste bien entendu à votre entière disposition si vous avez la moindre question d'ici là.
+
+Bien cordialement,`
+  },
+  es: {
+    subject: 'Seguimiento de nuestra conversación - CloudTalk',
+    body: name => `Hola ${name},
+
+Quería hacer un seguimiento sobre el plan y sobre las soluciones que comentamos para tu configuración.
+
+La forma más fácil de ver si esto encaja es dedicar 30 minutos a revisar juntos tu configuración y mapearlo todo en vivo - así puedes ver exactamente cómo funcionaría para tu equipo. Eso suele aclarar bastante la decisión.
+
+¿Te vendría bien esta semana o a inicios de la próxima?
+
+Si mientras tanto te surgió alguna duda, mándamela sin problema y te la aclaro.
+
+Espero tus comentarios,`
+  }
+};
+
+// Working follow-up copy for leads that booked a meeting but did not reach qual.
+// UI-only: used by the in-app compose link. FR formal (vous), ES peninsular informal (tu).
+//
+// FR GENDER TRAP - do NOT write `etre` + past participle about the recipient (e.g. "vous etiez
+// interesse"), the participle agrees with their gender and templates cannot know it. Use `avoir`
+// with a following object ("vous aviez manifeste de l'interet") or a noun construction instead.
+// FR/ES house style here: no space before ? or :, and no opening inverted ¿ in Spanish -
+// deliberate per Santiago 2026-08-25, reads less templated than correct orthography would.
+//
+// INVEST, never SPEND/GIVE - wherever copy quantifies time, frame it as an investment
+// (invest / investir / invertir). Reason: "spend" frames the meeting as the reader's cost,
+// "invest" frames it as their stake, which is the psychological point. Per Santiago 2026-08-25.
+// Prefer the READER as the investor ("worth investing twenty minutes"); sender-side phrasing
+// ("happy to invest 10 mins") is kept only where it already reads that way.
+
+const WORKING_FOLLOWUP = {
+  en: {
+    subject: 'Picking this back up?',
+    body: name => `Hi ${name},
+
+You had a slot booked with me a while back and the thread went quiet after that.
+
+Still relevant on your side? Worth investing fifteen minutes to pick up where you left it.
+
+${BOOK.en}
+
+If it's off the table, just say so and I'll close it out.
+
+Look forward to hearing soon`
+  },
+  fr: {
+    subject: "Toujours d'actualité de votre côté?",
+    body: name => `Bonjour ${name},
+
+Nous avions bloqué un créneau ensemble, et le sujet est resté en suspens depuis.
+
+C'est toujours d'actualité de votre côté? Cela vaut la peine d'y investir un quart d'heure pour reprendre là où nous nous étions arrêtés.
+
+${BOOK.fr}
+
+Si le projet est tombé à l'eau, dites-le-moi et je clôture le suivi de mon côté.
+
+Au plaisir de vous lire`
+  },
+  es: {
+    subject: 'Sigue en pie?',
+    body: name => `Hola ${name},
+
+Teníamos un hueco reservado y el tema se quedó ahí.
+
+Sigue en pie por tu parte? Un cuarto de hora bien invertido y retomamos donde lo dejamos.
+
+${BOOK.es}
+
+Si ya está descartado, dímelo y lo cierro por mi parte.
+
+Quedo atento`
+  }
+};
+
+// Lukewarm copy for leads that replied to an email but never booked a meeting.
+// UI-only: used by the in-app compose link. FR formal (vous), ES informal (tu).
+
+const LUKEWARM = {
+  en: {
+    subject: 'Worth twenty minutes?',
+    body: name => `Hi ${name},
+
+You wrote back at one point but we never got a call in the diary.
+
+Worth investing twenty minutes? Enough to go through your setup and tell you straight whether CloudTalk fits.
+
+${BOOK.en}
+
+If it's not a priority right now, let me know and I'll stop chasing.
+
+Look forward to hearing soon`
+  },
+  fr: {
+    subject: 'Vingt minutes pour en parler?',
+    body: name => `Bonjour ${name},
+
+Vous m'aviez répondu il y a quelque temps, mais nous n'avons jamais réussi à caler un échange.
+
+Ça vaut le coup d'y investir vingt minutes? De quoi passer votre configuration en revue et vous dire franchement si CloudTalk a sa place ou non.
+
+${BOOK.fr}
+
+Si ce n'est pas une priorité en ce moment, dites-le-moi et j'arrête de relancer.
+
+Au plaisir de vous lire`
+  },
+  es: {
+    subject: 'Merece la pena?',
+    body: name => `Hola ${name},
+
+Me contestaste en su momento, pero nunca llegamos a cuadrar una llamada.
+
+Merece la pena invertir veinte minutos? Lo justo para repasar tu configuración y decirte con franqueza si CloudTalk encaja o no.
+
+${BOOK.es}
+
+Si ahora no es prioridad, dímelo y dejo de insistir.
+
+Quedo atento`
+  }
+};
+
+// Reactivation copy for the non-qual stale segment (no qual meeting held).
+// UI-only: used by the in-app compose link, NOT by Plan 4 auto-drafts (Post-Qual only).
+// FR formal (vous), ES informal (tu). Signed off by Santiago Subra 2026-07-06.
+
+const REACTIVATION = {
+  en: {
+    subject: 'Checking in on your setup - CloudTalk',
+    body: name => `Hi ${name},
+
+You came to CloudTalk a little while back but we haven't been able to connect since.
+
+Are you still evaluating? Happy to invest 10 mins reviewing your use case.
+
+${BOOK.en}
+
+If the timing has shifted, no worries - just let me know and I'll leave it here.
+
+Look forward to hearing soon`
+  },
+  fr: {
+    subject: "Toujours d'actualité? - CloudTalk",
+    body: name => `Bonjour ${name},
+
+Vous aviez manifesté de l'intérêt pour CloudTalk il y a quelque temps, mais nous n'avons pas eu l'occasion d'échanger depuis.
+
+Toujours en réflexion? J'investis volontiers dix minutes pour faire le point sur votre projet.
+
+${BOOK.fr}
+
+Si le sujet n'est plus d'actualité, dites-le-moi et j'en resterai là.
+
+Au plaisir de vous lire`
+  },
+  es: {
+    subject: 'Sigues valorando opciones? - CloudTalk',
+    body: name => `Hola ${name},
+
+Te interesaste por CloudTalk hace un tiempo, pero no hemos llegado a hablar desde entonces.
+
+Sigues valorando opciones? Con gusto invierto diez minutos en repasar tu caso.
+
+${BOOK.es}
+
+Si ya no es el momento, dímelo sin más y lo dejo aquí.
+
+Quedo atento`
+  }
+};
+/*__SHARED_COPY_END__*/
+
+function buildEmail(c){
+  const name = c.firstname || c.name?.split(' ')[0] || 'there';
+  if(c.hasQual){
+    const t = POST_QUAL[c.outreachLang] || POST_QUAL.en;
+    return { subject: t.subject, body: t.body(name) };
+  }
+  if(c.engagementTier === 'Working'){
+    const t = WORKING_FOLLOWUP[c.outreachLang] || WORKING_FOLLOWUP.en;
+    return { subject: t.subject, body: t.body(name) };
+  }
+  if(c.engagementTier === 'Lukewarm'){
+    const t = LUKEWARM[c.outreachLang] || LUKEWARM.en;
+    return { subject: t.subject, body: t.body(name) };
+  }
+  const r = REACTIVATION[c.outreachLang] || REACTIVATION.en;
+  return { subject: r.subject, body: r.body(name) };
+}
+
+// ---- persistence (localStorage) ----
+const SNOOZE_KEY='slt_snoozed_v1', TREND_KEY='slt_trend_v1', CONTACTED_KEY='slt_contacted_v1';
+const loadSnooze=()=>{try{return JSON.parse(localStorage.getItem(SNOOZE_KEY)||'{}')}catch{return{}}};
+const saveSnooze=o=>localStorage.setItem(SNOOZE_KEY,JSON.stringify(o));
+let snoozed=loadSnooze();
+// Contacted = leads you've emailed from here. Browser-only bridge: Gmail sends don't cross a lead
+// off until the next HubSpot pull moves notes_last_updated, so this fills the same-day gap.
+const loadContacted=()=>{try{return JSON.parse(localStorage.getItem(CONTACTED_KEY)||'{}')}catch{return{}}};
+const saveContacted=o=>localStorage.setItem(CONTACTED_KEY,JSON.stringify(o));
+let contacted=loadContacted();
+const markContacted=id=>{contacted[id]=new Date().toISOString();saveContacted(contacted);};
+
+// ---- state ----
+const state={ tab:'7d', kpi:'all', q:'', status:'ALL', seat:'ALL', sortKey:'score', sortDir:'desc', showSnoozed:false, showContacted:false, selected:new Set() };
+
+// pass-through: scores precomputed by refresh.mjs
+const ALL = SNAPSHOT.contacts.map(c => ({
+  ...c,
+  // score, breakdown, segment, hasQual, seatBand, seatRank come precomputed from refresh.mjs
+  scoreClass: 'score-' + c.segment
+}));
+
+// ---- trend (day-over-day, accumulates in localStorage) ----
+function recordTrend(count){
+  let t; try{t=JSON.parse(localStorage.getItem(TREND_KEY)||'[]')}catch{t=[]}
+  const today=new Date(NOW).toISOString().slice(0,10);
+  if(!t.length || t[t.length-1].d!==today) t.push({d:today,n:count});
+  else t[t.length-1].n=count;
+  t=t.slice(-30); localStorage.setItem(TREND_KEY,JSON.stringify(t)); return t;
+}
+
+// ---- filtering ----
+// staleDays>=th, matching the pull floor (notes_last_updated < today-7d => staleDays>=7). Using > silently hid the =7 cohort.
+function baseFor(tab){ const th=tab==='14d'?14:7; return ALL.filter(c=>c.staleDays===null||c.staleDays>=th); }
+function filtered(){
+  // Deal-without-qual is a data-integrity alert, not a staleness bucket - surface across ALL leads.
+  let arr = state.kpi==='dealflag' ? ALL.filter(c=>c.dealButNotQualified) : baseFor(state.tab);
+  if(state.status!=='ALL') arr=arr.filter(c=>c.status===state.status);
+  if(state.seat!=='ALL') arr=arr.filter(c=>c.seatBand===state.seat);
+  if(state.kpi==='qual') arr=arr.filter(c=>c.hasQual);
+  if(state.kpi.startsWith('tier:')) arr=arr.filter(c=>c.engagementTier===state.kpi.slice(5));
+  if(!state.showSnoozed) arr=arr.filter(c=>!snoozed[c.id]);
+  if(!state.showContacted) arr=arr.filter(c=>!contacted[c.id]);
+  const q=state.q.trim().toLowerCase();
+  if(q) arr=arr.filter(c=>[c.name,c.email,c.country].some(v=>(v||'').toLowerCase().includes(q)));
+  const dir=state.sortDir==='asc'?1:-1;
+  const key=state.sortKey;
+  arr=[...arr].sort((a,b)=>{
+    let av,bv;
+    if(key==='staleDays'){av=a.staleDays==null?1e9:a.staleDays;bv=b.staleDays==null?1e9:b.staleDays;}
+    else if(key==='name'){return dir*(a.name||'').localeCompare(b.name||'');}
+    else if(key==='mqlDate'){av=new Date(a.mqlDate||0).getTime();bv=new Date(b.mqlDate||0).getTime();}
+    else {av=a[key]||0;bv=b[key]||0;}
+    return dir*(av-bv);
+  });
+  return arr;
+}
+
+// ---- render ----
+function trendSvg(t){
+  if(t.length<2) return '<span class="dim" style="color:var(--dim);font-size:12px">building history - reopen daily to chart it</span>';
+  const w=160,h=34,max=Math.max(...t.map(x=>x.n)),min=Math.min(...t.map(x=>x.n)),rng=(max-min)||1;
+  const pts=t.map((x,i)=>`${(i/(t.length-1)*w).toFixed(1)},${(h-((x.n-min)/rng)*h).toFixed(1)}`).join(' ');
+  const first=t[0].n,last=t[t.length-1].n,delta=last-first;
+  const cls=delta>0?'up':delta<0?'down':'flat', arrow=delta>0?'▲':delta<0?'▼':'—';
+  return `<svg width="${w}" height="${h}"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${pts}"/></svg>
+    <span class="delta ${cls}">${arrow} ${delta>0?'+':''}${delta} over ${t.length}d</span>`;
+}
+
+function render(){
+  const app=document.getElementById('app');
+  const hide=c=>(!state.showSnoozed&&snoozed[c.id])||(!state.showContacted&&contacted[c.id]);
+  const b7=baseFor('7d').filter(c=>!hide(c));
+  const b14=baseFor('14d').filter(c=>!hide(c));
+  const view=filtered();
+  const tabBase=baseFor(state.tab).filter(c=>!snoozed[c.id]&&!contacted[c.id]);
+  const kTier=t=>tabBase.filter(c=>c.engagementTier===t).length;
+  const kQual=tabBase.filter(c=>c.hasQual).length;
+  const kDeal=ALL.filter(c=>c.dealButNotQualified).length;
+  const trend=recordTrend(b7.length);
+  const statuses=['ALL',...Array.from(new Set(baseFor(state.tab).map(c=>c.status)))];
+  const seatOpts=Array.from(new Set(baseFor(state.tab).map(c=>c.seatBand).filter(Boolean)))
+    .map(b=>({b,r:(ALL.find(c=>c.seatBand===b)||{}).seatRank||0})).sort((x,y)=>x.r-y.r).map(o=>o.b);
+  const snoozeCount=Object.keys(snoozed).length;
+  const contactedCount=Object.keys(contacted).length;
+
+  const kpi=(id,n,l,d)=>`<button class="kpi ${state.kpi===id?'active':''}" data-kpi="${id}"><div class="n">${n}</div><div class="l">${l}</div><div class="d">${d}</div></button>`;
+
+  app.innerHTML=`
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>Your Pipeline &mdash; ACTION NEEDED</h1>
+        <div class="sub">No activity 7+ days &middot; MQL &lt;180d &middot; owner <b>Santiago Subra</b><br>snapshot <b>${fmtDate(SNAPSHOT.snapshotDate)}</b> &middot; <b>${SNAPSHOT.count}</b> leads pulled</div>
+      </div>
+
+      <div class="kpis">
+        ${kDeal?kpi('dealflag',kDeal,'Deal - NOT qualified','manual error: set status in HubSpot'):''}
+        ${kpi('qual',kQual,'Post-Qual - HOT','proposal sent, no reply')}
+        ${kpi('tier:Working',kTier('Working'),'Working','meeting booked, went quiet')}
+        ${kpi('tier:Lukewarm',kTier('Lukewarm'),'Lukewarm','replied by email, never met')}
+        ${kpi('tier:Approached',kTier('Approached'),'Approached','no calendar, no reply')}
+      </div>
+
+      <div class="trend">
+        <span class="lab">Stale count trend (7d bucket)</span>${trendSvg(trend)}
+      </div>
+
+      <div class="side-filters">
+        <span class="fl">Filters</span>
+        <select id="status">${statuses.map(s=>`<option value="${esc(s)}" ${state.status===s?'selected':''}>${s==='ALL'?'All statuses':esc(STATUS_LABEL[s]||s)}</option>`).join('')}</select>
+        <select id="seat">${['ALL',...seatOpts].map(s=>`<option value="${esc(s)}" ${state.seat===s?'selected':''}>${s==='ALL'?'All seat ranges':esc(s)+' seats'}</option>`).join('')}</select>
+        <label class="toggle"><input type="checkbox" id="snz" ${state.showSnoozed?'checked':''}/> Show snoozed (${snoozeCount})</label>
+        <label class="toggle"><input type="checkbox" id="ctd" ${state.showContacted?'checked':''}/> Show contacted (${contactedCount})</label>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="toolbar">
+        <div class="tabs">
+          <button class="${state.tab==='7d'?'on':''}" data-tab="7d">7+ days (${b7.length})</button>
+          <button class="${state.tab==='14d'?'on':''}" data-tab="14d">14+ days (${b14.length})</button>
+        </div>
+        <input id="q" placeholder="Search name, email, country..." value="${esc(state.q)}" style="min-width:240px;flex:1"/>
+        <span class="dim num" style="color:var(--dim)">${view.length} shown</span>
+      </div>
+
+      ${(()=>{const sel=view.filter(c=>state.selected.has(c.id));return sel.length?`
+      <div class="bulkbar">
+        <span class="cnt">${sel.length} selected</span>
+        <button class="btn primary mini" id="bulkEmail">Bulk outreach - compose in Gmail</button>
+        <button class="btn mini" id="bulkMark">Mark all contacted</button>
+        <button class="btn mini" id="bulkClear">Clear selection</button>
+      </div>`:'';})()}
+
+      ${(()=>{
+        if(!view.length) return '<div class="empty">Nothing matches. Clear filters or switch tab.</div>';
+        const TIERS=[
+          {id:'Working',desc:'meeting booked · awaiting follow-through',cls:'section-working'},
+          {id:'Lukewarm',desc:'replied by email · no meeting yet',cls:'section-lukewarm'},
+          {id:'Approached',desc:'no calendar or email interaction',cls:'section-approached'}
+        ];
+        return TIERS.map((tier,ti)=>{
+          const rows=view.filter(c=>c.engagementTier===tier.id);
+          const selCol=ti===0?'<input type="checkbox" id="selAll" title="Select all shown"/>':'';
+          const thead=`<thead><tr><th class="selcol">${selCol}</th><th data-sort="name">Lead</th><th data-sort="country">Country</th><th data-sort="score">Score</th><th data-sort="staleDays">Last activity</th><th data-sort="mqlDate">MQL date</th><th data-sort="seatRank">Seats</th><th>Signals</th><th>Actions</th></tr></thead>`;
+          const tbody=rows.length?rows.map(rowHtml).join(''):'<tr><td colspan="9" style="text-align:center;padding:18px;color:var(--muted);font-size:12px">None in this section.</td></tr>';
+          return `<div class="section-header ${tier.cls}">${tier.id} <span class="section-count">${rows.length}</span><span class="section-desc">${tier.desc}</span></div><div class="table-card"><table>${thead}<tbody>${tbody}</tbody></table></div>`;
+        }).join('');
+      })()}
+
+      <div class="footnote">
+        Frozen snapshot pulled ${fmtDate(SNAPSHOT.snapshotDate)} via HubSpot. Score model: MQL freshness + seats + source + email engagement + conversions + URL, minus a 6-tier staleness penalty.
+        Snooze/dismiss and trend history are stored in this browser only (localStorage) - they do not write back to HubSpot.
+        To refresh the data, re-pull and re-publish.
+      </div>
+    </main>
+  </div>`;
+
+  bind();
+}
+
+function rowHtml(c){
+  const t=stalenessTier(c.staleDays);
+  const bd=c.breakdown.map(x=>`<span class="${x.p>=0?'pos':'neg'}">${esc(x.l)} ${x.p>=0?'+':''}${x.p}</span>`).join('');
+  const url=deriveUrl(c);
+  const sn=snoozed[c.id];
+  const ct=contacted[c.id];
+  const cc=c.finalCountry||c.country;
+  return `<tr class="row ${sn?'snoozed':''} ${ct?'contacted':''}">
+    <td class="selcol"><input type="checkbox" data-sel="${c.id}" ${state.selected.has(c.id)?'checked':''}/></td>
+    <td>
+      <div class="lead-name">${esc(c.name)}${c.hasQual?' <span class="hotflag">HOT - proposal sent</span>':''}${c.dealButNotQualified?' <span class="dealflag">DEAL - NOT QUALIFIED</span>':''}</div>
+      <div class="lead-meta">${esc(STATUS_LABEL[c.status]||c.status)} &middot; ${esc(c.country||'—')} &middot; ${esc((c.source||'').replace(/_/g,' ').toLowerCase())}${url?' &middot; <a href="'+esc(url)+'" target="_blank" rel="noopener">site</a>':''}</div>
+      ${c.hasQual?`<div class="lead-meta" style="color:var(--hot)">Qual call: ${fmtDate(c.qualCallDate)}</div>`:''}
+      ${c.dealButNotQualified?`<div class="lead-meta" style="color:#c0353a;font-weight:700">Deal exists but status is "${esc(c.status)}" - should be qualified. Fix in HubSpot.</div>`:''}
+      ${sn?`<div class="lead-meta" style="color:var(--warm)">snoozed: ${esc(sn)}</div>`:''}
+      ${ct?`<div class="lead-meta" style="color:var(--fresh)">contacted: ${fmtDate(ct)}</div>`:''}
+    </td>
+    <td class="country-cell">${flagEmoji(cc)} ${esc(cc||'—')}</td>
+    <td>
+      <div class="score ${c.scoreClass}">${c.score}</div>
+      <div class="bd">${bd}</div>
+    </td>
+    <td class="${t.cls}">${t.label}<div class="lead-meta">${fmtDate(c.lastActivity)}</div></td>
+    <td>${fmtDate(c.mqlDate)}<div class="lead-meta">${(()=>{const d=daysSince(c.mqlDate);return d==null?'':d+'d ago';})()}</div></td>
+    <td>${c.seatBand||'—'}</td>
+    <td class="sig">${c.emailOpen?c.emailOpen+' opens ':''}${c.emailClick?c.emailClick+' clicks ':''}${c.convEvents?c.convEvents+' conv ':''}${(!c.emailOpen&&!c.emailClick&&!c.convEvents)?'—':''}</td>
+    <td>
+      <div class="actions">
+        <div class="row-actions">
+          <a class="btn mini" href="${hsUrl(c.id)}" target="_blank" rel="noopener">HubSpot</a>
+          <button class="btn mini primary" data-email="${c.id}">Email</button>
+        </div>
+        <div class="row-actions">
+          ${ct?`<button class="btn mini" data-uncontacted="${c.id}">Un-mark</button>`:`<button class="btn mini" data-contacted="${c.id}">Mark contacted</button>`}
+          ${sn?`<button class="btn mini" data-unsnooze="${c.id}">Un-snooze</button>`:`<button class="btn mini" data-snooze="${c.id}">Snooze</button>`}
+        </div>
+      </div>
+    </td>
+  </tr>`;
+}
+
+function bind(){
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;state.kpi='all';render();});
+  document.querySelectorAll('[data-kpi]').forEach(b=>b.onclick=()=>{state.kpi=state.kpi===b.dataset.kpi?'all':b.dataset.kpi;render();});
+  document.querySelectorAll('th[data-sort]').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;if(state.sortKey===k)state.sortDir=state.sortDir==='asc'?'desc':'asc';else{state.sortKey=k;state.sortDir=k==='name'?'asc':'desc';}render();});
+  const q=document.getElementById('q'); q.oninput=()=>{state.q=q.value;const p=q.selectionStart;render();const nq=document.getElementById('q');nq.focus();nq.setSelectionRange(p,p);};
+  document.getElementById('status').onchange=e=>{state.status=e.target.value;render();};
+  document.getElementById('seat').onchange=e=>{state.seat=e.target.value;render();};
+  document.getElementById('snz').onchange=e=>{state.showSnoozed=e.target.checked;render();};
+  document.getElementById('ctd').onchange=e=>{state.showContacted=e.target.checked;render();};
+  document.querySelectorAll('[data-email]').forEach(b=>b.onclick=()=>openEmail(b.dataset.email));
+  document.querySelectorAll('[data-snooze]').forEach(b=>b.onclick=()=>openSnooze(b.dataset.snooze));
+  document.querySelectorAll('[data-unsnooze]').forEach(b=>b.onclick=()=>{delete snoozed[b.dataset.unsnooze];saveSnooze(snoozed);render();});
+  document.querySelectorAll('[data-contacted]').forEach(b=>b.onclick=()=>{markContacted(b.dataset.contacted);render();});
+  document.querySelectorAll('[data-uncontacted]').forEach(b=>b.onclick=()=>{delete contacted[b.dataset.uncontacted];saveContacted(contacted);render();});
+  // ---- selection ----
+  document.querySelectorAll('[data-sel]').forEach(cb=>cb.onchange=()=>{const id=cb.dataset.sel;if(cb.checked)state.selected.add(id);else state.selected.delete(id);render();});
+  const selAll=document.getElementById('selAll');
+  if(selAll){
+    const vis=filtered(); const allSel=vis.length&&vis.every(c=>state.selected.has(c.id));
+    selAll.checked=!!allSel;
+    selAll.onchange=()=>{if(selAll.checked)vis.forEach(c=>state.selected.add(c.id));else vis.forEach(c=>state.selected.delete(c.id));render();};
+  }
+  const be=document.getElementById('bulkEmail'); if(be) be.onclick=()=>openBulk();
+  const bm=document.getElementById('bulkMark'); if(bm) bm.onclick=()=>{filtered().filter(c=>state.selected.has(c.id)).forEach(c=>markContacted(c.id));state.selected.clear();render();};
+  const bc=document.getElementById('bulkClear'); if(bc) bc.onclick=()=>{state.selected.clear();render();};
+}
+
+// ---- email modal ----
+function openEmail(id){
+  const c=ALL.find(x=>x.id===id); const {subject,body}=buildEmail(c);
+  const to=encodeURIComponent(c.email||''), su=encodeURIComponent(subject), bd=encodeURIComponent(body);
+  const gmail=`https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${su}&body=${bd}`;
+  const mailto=`mailto:${to}?subject=${su}&body=${bd}`;
+  const bg=document.createElement('div'); bg.className='modal-bg';
+  bg.innerHTML=`<div class="modal">
+    <button class="close">&times;</button>
+    <h3>Reactivation email &mdash; ${esc(c.name)}</h3>
+    <div style="color:var(--muted);font-size:12px;margin-bottom:8px">To: ${esc(c.email||'no email on record')} &middot; Subject: ${esc(subject)}</div>
+    <textarea id="ebody">${esc(body)}</textarea>
+    <div class="foot">
+      <button class="btn" id="copy">Copy to clipboard</button>
+      <a class="btn primary" id="gcompose" href="${gmail}" target="_blank" rel="noopener">Compose in Gmail</a>
+      <a class="btn" href="${mailto}">Mail client</a>
+      <a class="btn" href="${hsUrl(c.id)}" target="_blank" rel="noopener">Open in HubSpot</a>
+    </div>
+  </div>`;
+  document.body.appendChild(bg);
+  bg.onclick=e=>{if(e.target===bg)bg.remove();};
+  bg.querySelector('.close').onclick=()=>bg.remove();
+  bg.querySelector('#copy').onclick=()=>{navigator.clipboard.writeText(document.getElementById('ebody').value);bg.querySelector('#copy').textContent='Copied ✓';};
+  // Composing in Gmail = contacted. Cross it off locally so you don't double-hit before next pull.
+  bg.querySelector('#gcompose').onclick=()=>{markContacted(c.id);setTimeout(()=>{bg.remove();render();},50);};
+}
+
+// ---- snooze modal ----
+function openSnooze(id){
+  const c=ALL.find(x=>x.id===id);
+  const REASONS=['Contacted today','Not a fit','Wrong contact','Following up later','Handed to AE','No response - closing'];
+  const bg=document.createElement('div'); bg.className='modal-bg';
+  bg.innerHTML=`<div class="modal">
+    <button class="close">&times;</button>
+    <h3>Snooze / dismiss &mdash; ${esc(c.name)}</h3>
+    <div style="color:var(--muted);font-size:12px;margin-bottom:8px">Removes this lead from the ACTION NEEDED list (this browser only). Reason is logged locally.</div>
+    <div class="reasons">${REASONS.map(r=>`<button data-r="${esc(r)}">${esc(r)}</button>`).join('')}</div>
+    <input type="text" id="rcustom" placeholder="or type a custom reason..."/>
+    <div class="foot"><button class="btn" id="dosnooze">Snooze with custom reason</button></div>
+  </div>`;
+  document.body.appendChild(bg);
+  bg.onclick=e=>{if(e.target===bg)bg.remove();};
+  bg.querySelector('.close').onclick=()=>bg.remove();
+  bg.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{snoozed[id]=b.dataset.r;saveSnooze(snoozed);bg.remove();render();});
+  bg.querySelector('#dosnooze').onclick=()=>{const v=bg.querySelector('#rcustom').value.trim()||'Snoozed';snoozed[id]=v;saveSnooze(snoozed);bg.remove();render();};
+}
+
+// ---- bulk outreach modal ----
+// Bodies are personalised per lead (name + language route), so a single Gmail draft can't cover the
+// batch. Instead: one personalised Compose link per lead. Clicking it opens Gmail AND marks contacted.
+function openBulk(){
+  const sel=filtered().filter(c=>state.selected.has(c.id));
+  const withEmail=sel.filter(c=>c.email), noEmail=sel.filter(c=>!c.email);
+  const bg=document.createElement('div'); bg.className='modal-bg';
+  const item=c=>{
+    const {subject,body}=buildEmail(c);
+    const gmail=`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(c.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    return `<div class="bulk-item" data-bid="${c.id}">
+      <span class="langtag">${c.outreachLang}</span>
+      <div class="who"><div class="nm">${esc(c.name)}${c.hasQual?' <span class="hotflag">HOT</span>':''}</div><div class="em">${esc(c.email)}</div></div>
+      <a class="btn primary mini bulk-go" data-gid="${c.id}" href="${gmail}" target="_blank" rel="noopener">Compose</a>
+    </div>`;
+  };
+  bg.innerHTML=`<div class="modal">
+    <button class="close">&times;</button>
+    <h3>Bulk outreach &mdash; ${withEmail.length} lead${withEmail.length===1?'':'s'}</h3>
+    <div style="color:var(--muted);font-size:12px;margin-bottom:6px">Each lead gets a personalised, language-routed draft. Clicking <b>Compose</b> opens Gmail and marks that lead contacted here. ${noEmail.length?`<span style="color:var(--hot)">${noEmail.length} skipped - no email on record.</span>`:''}</div>
+    <div class="bulk-list">${withEmail.map(item).join('')}</div>
+    <div class="foot">
+      <button class="btn" id="markAll">Mark all as contacted</button>
+      <button class="btn" id="bulkClose2">Done</button>
+    </div>
+  </div>`;
+  document.body.appendChild(bg);
+  const close=()=>{bg.remove();state.selected.clear();render();};
+  bg.onclick=e=>{if(e.target===bg)close();};
+  bg.querySelector('.close').onclick=close;
+  bg.querySelector('#bulkClose2').onclick=close;
+  bg.querySelector('#markAll').onclick=()=>{withEmail.forEach(c=>markContacted(c.id));close();};
+  bg.querySelectorAll('.bulk-go').forEach(a=>a.onclick=()=>{markContacted(a.dataset.gid);a.closest('.bulk-item').classList.add('done');saveContacted(contacted);});
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# Live data files - contain PII, never commit
+stale-lead-raw-pull.json
+stale-lead-raw-pull.json.bak.prev
+stale-lead-tracker-snapshot.json
+stale-lead-tracker-snapshot.json.bak
+stale-lead-history.json
+stale-lead-history.json.bak.*
+stale-lead-diff.json
+stale-lead-drafted.json
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
