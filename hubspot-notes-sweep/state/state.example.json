@@ -1,0 +1,9 @@
+{
+  "_comment": "Example state file. The sweep writes this to ~/.claude/skills/hubspot-notes/state.json. lastSuccessfulRun is the high-water mark; the next sweep pulls calls from this timestamp forward. parked maps callId -> retry count (0..2); at >=2 the sweep ABANDONS the call and stops re-pinging.",
+  "lastSuccessfulRun": "2026-01-01T00:00:00Z",
+  "windowEnd": "2026-01-01T00:00:00Z",
+  "parked": {
+    "<CALL_ID_1>": 2,
+    "<CALL_ID_2>": 1
+  }
+}
